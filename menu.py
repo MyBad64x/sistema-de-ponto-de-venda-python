@@ -1,6 +1,6 @@
 #título com nome do sistema e versão atual
 NOME_SISTEMA = "PDV Python"
-VERSAO = "1.1.0"
+VERSAO = "1.2.0"
 
 #função para alterar o cabeçalho inteiro sem ficar catando código em cada função
 def cabecalho(titulo):
