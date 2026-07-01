@@ -1,0 +1,72 @@
+PDV
+
+Abrir caixa
+↓
+Cadastrar produto
+↓
+Adicionar ao carrinho
+↓
+Finalizar venda
+↓
+Gravar venda
+↓
+Gravar itens da venda
+↓
+Atualizar estoque
+↓
+Limpar carrinho
+
+
+
+
+PROMPT DE TESTE TEMPORARIO PARA O MAIN.PY
+
+from caixa import abrir_caixa
+from produtos import (
+    cadastrar_produto,
+    listar_produtos
+)
+from carrinho import (
+    adicionar_item,
+    listar_itens
+)
+from vendas import finalizar_venda
+
+print("\n=== TESTE 1 - ABRIR CAIXA ===")
+abrir_caixa(100)
+
+print("\n=== TESTE 2 - CADASTRAR PRODUTOS ===")
+cadastrar_produto(
+    "Coca-Cola 2L",
+    12.50,
+    10
+)
+
+cadastrar_produto(
+    "Água 500ml",
+    3.00,
+    20
+)
+
+print("\n=== TESTE 3 - LISTAR PRODUTOS ===")
+listar_produtos()
+
+print("\n=== TESTE 4 - ADICIONAR AO CARRINHO ===")
+adicionar_item(
+    1,
+    2
+)
+
+adicionar_item(
+    2,
+    1
+)
+
+print("\n=== TESTE 5 - LISTAR CARRINHO ===")
+listar_itens()
+
+print("\n=== TESTE 6 - FINALIZAR VENDA ===")
+finalizar_venda("PIX")
+
+print("\n=== TESTE 7 - ESTOQUE APÓS VENDA ===")
+listar_produtos()
