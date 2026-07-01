@@ -1,14 +1,4 @@
-from banco import conectar
+from menu import menu_principal
 
-conn = conectar()
-cursor = conn.cursor()
-
-cursor.execute("""
-    SELECT *
-    FROM vendas
-""")
-
-for venda in cursor.fetchall():
-    print(venda)
-
-conn.close()
+if __name__ == "__main__":
+    menu_principal()
