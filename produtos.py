@@ -74,7 +74,43 @@ def buscar_produto(id_produto):
 
     conn.close()
 
-    return produto 
+    return produto
+
+#função para editar produto
+def editar_produto(
+    id_produto,
+    nome,
+    preco,
+    estoque
+):
+
+    produto = buscar_produto(id_produto)
+
+    if produto is None:
+        print("Produto não encontrado!")
+        return
+    
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE produtos
+        SET
+            nome = ?,
+            preco = ?,
+            estoque = ?
+        WHERE id = ?
+    """, (
+        nome,
+        preco,
+        estoque,
+        id_produto
+    ))
+
+    conn.commit()
+    conn.close()
+
+    print(f"Produto '{nome}' atualizado com sucesso!")
 
 #função para atualização de estoque
 def atualizar_estoque(id_produto, novo_estoque):
@@ -110,6 +146,15 @@ def zerar_estoque():
 #função de desativar produto ao invés de excluir totalmente(facilita no gerenciamento poupando tempo)
 def desativar_produto(id_produto):
 
+    produto = buscar_produto(id_produto)
+
+    if produto is None:
+        print("Produto não encontrado")
+
+    if produto[4] == 0:
+        print("Produto já está desativado!")
+        return
+
     conn = conectar()
     cursor = conn.cursor()
 
@@ -122,7 +167,7 @@ def desativar_produto(id_produto):
     conn.commit()
     conn.close()
 
-    print("Produto desativado!")
+    print("Produto '{produto[1]}' desativado com sucesso!")
 
 #função para ativar produto que estava desativado
 def ativar_produto(id_produto):

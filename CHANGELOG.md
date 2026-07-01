@@ -11,18 +11,25 @@ z= correção de bugs no projeto
 
 ---
 
-## [1.2.0] - Em desenvolvimento
+## [1.2.1] - 2026-06-30
 
 ### Adicionado
 
-- Criação do menu principal do sistema.
-- Criação do menu de Produtos.
-- Criação do menu de Vendas.
-- Criação do menu de Estoque.
-- Criação do menu de Caixa.
-- Criação da função `cabecalho()`.
-- Criação da função `mostrar_opcoes()`.
-- Refatoração do `main.py`, que passou a ser apenas o ponto de entrada da aplicação.
+- Integração completa dos menus com as funcionalidades do sistema.
+- Módulo de Produtos totalmente operacional.
+- Módulo de Estoque totalmente operacional.
+- Módulo de Caixa totalmente operacional.
+- Módulo de Vendas totalmente operacional.
+
+### Alterado
+
+- O `main.py` passou a utilizar exclusivamente a navegação por menus.
+- Melhorias na organização da interface do terminal.
+
+### Corrigido
+
+- Validação de IDs de produtos antes de executar operações.
+- Tratamento para tentativa de desativação de produtos inexistentes ou já desativados.
 
 ---
 

@@ -1,6 +1,29 @@
+from produtos import (
+    listar_produtos, 
+    cadastrar_produto,
+    desativar_produto,
+    editar_produto,
+    buscar_produto
+)
+from produtos import (
+    entrada_estoque,
+    ajustar_estoque,
+)
+from movimentacoes_estoque import listar_movimentacoes
+from caixa import (
+    abrir_caixa,
+    caixa_aberto,
+    fechar_caixa
+)
+from carrinho import (
+    adicionar_item,
+    listar_itens,
+    limpar_carrinho
+)
+from vendas import finalizar_venda
 #título com nome do sistema e versão atual
 NOME_SISTEMA = "PDV Python"
-VERSAO = "1.2.0"
+VERSAO = "1.2.1"
 
 #função para alterar o cabeçalho inteiro sem ficar catando código em cada função
 def cabecalho(titulo):
@@ -71,19 +94,45 @@ def menu_produtos():
         ])
 
         opcao = input("\nEscolha uma opção: ")
-
+        #cadastrar produto
         if opcao == "1":
-            print("\nEm desenvolvimento.")
+            nome = input("\nNome do produto: ")
+            preco = float(input("Preço: R$ "))
+            estoque = int(input("Estoque inicial: "))
 
+            cadastrar_produto(
+                nome,
+                preco,
+                estoque
+            )
+        #listar produtos
         elif opcao == "2":
-            print("\nEm desenvolvimento.")
-
+            listar_produtos()
+        #editar produto
         elif opcao == "3":
-            print("\nEm desenvolvimento.")
+            id_produto = int(input("\nID do produto: "))
 
+            produto = buscar_produto(id_produto)
+            if produto is None:
+                print("\nProduto não encontrado!")
+                continue
+
+            nome = input("Novo nome: ")
+            preco = float(input("Novo preço: R$ "))
+            estoque = int(input("Novo estoque: "))
+
+            editar_produto(
+                id_produto,
+                nome,
+                preco,
+                estoque
+            )
+        #inativar produto
         elif opcao == "4":
-            print("\nEm desenvolvimento.")
-
+            listar_produtos()
+            id_produto = int(input("\nID do produto que deseja desativar: "))
+            desativar_produto(id_produto)
+        #voltar
         elif opcao == "0":
             break
 
@@ -110,16 +159,33 @@ def menu_vendas():
         opcao = input("\nEscolha uma opção: ")
 
         if opcao == "1":
-            print("\nEm desenvolvimento.")
+            listar_produtos()
+            
+            id_produto = int(input("\nID do produto: "))
+            produto = buscar_produto(id_produto)
+
+            if produto is None:
+                print("\nProduto não encontrado!")
+                continue
+
+            quantidade = int(input("Quantidade: "))
+
+            adicionar_item(
+                id_produto,
+                quantidade
+            )
 
         elif opcao == "2":
-            print("\nEm desenvolvimento.")
+            listar_itens()
 
         elif opcao == "3":
-            print("\nEm desenvolvimento.")
+            forma_pagamento = input("\nForma de pagamento: ")
+            finalizar_venda(
+                forma_pagamento
+            )
 
         elif opcao == "4":
-            print("\nEm desenvolvimento.")
+            limpar_carrinho()
 
         elif opcao == "0":
             break
@@ -143,16 +209,36 @@ def menu_estoque():
         ])
 
         opcao = input("\nEscolha uma opção: ")
-
+        #entrada estoque
         if opcao == "1":
-            print("\nEm desenvolvimento.")
+            listar_produtos()
 
+            id_produto = int(input("\nID do produto: "))
+            quantidade = int(input("\nQuantidade: "))
+            observacao = input("\nObservação: ")
+
+            entrada_estoque(
+                id_produto,
+                quantidade,
+                observacao
+            )
+        #ajuste de estoque
         elif opcao == "2":
-            print("\nEm desenvolvimento.")
+            listar_produtos()
 
+            id_produto = int(input("\nID do produto: "))
+            novo_estoque = int(input("Novo estoque: "))
+            observacao = input("Observação: ")
+
+            ajustar_estoque(
+                id_produto,
+                novo_estoque,
+                observacao
+            )
+        #movimentações estoque
         elif opcao == "3":
-            print("\nEm desenvolvimento.")
-
+            listar_movimentacoes()
+        #voltar
         elif opcao == "0":
             break
 
@@ -181,13 +267,18 @@ def menu_caixa():
         opcao = input("\nEscolha uma opção: ")
 
         if opcao == "1":
-            print("\nEm desenvolvimento.")
+            valor = float(input("\nValor inicial do caixa: R$ "))
+            abrir_caixa(valor)
 
         elif opcao == "2":
-            print("\nEm desenvolvimento.")
+            fechar_caixa()
 
         elif opcao == "3":
-            print("\nEm desenvolvimento.")
+            caixa = caixa_aberto()
+            if caixa is None:
+                print("\nNenhum caixa está aberto.")
+            else:
+                print(f"\nCaixa aberto (ID {caixa[0]}).")
 
         elif opcao == "4":
             print("\nEm desenvolvimento.")
