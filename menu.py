@@ -22,7 +22,9 @@ from carrinho import (
 )
 from utilitarios import (
     ler_decimal,
-    ler_inteiro
+    ler_inteiro,
+    limpar_tela,
+    pausar
 )
 
 
@@ -88,6 +90,8 @@ def menu_produtos():
 
     while True:
 
+        limpar_tela()
+
         #funcao do cabecalho
         cabecalho("PRODUTOS")
 
@@ -100,6 +104,8 @@ def menu_produtos():
         ])
 
         opcao = input("\nEscolha uma opção: ")
+        
+        
         #cadastrar produto
         if opcao == "1":
             nome = input("\nNome do produto: ")
@@ -111,12 +117,18 @@ def menu_produtos():
                 preco,
                 estoque
             )
+            pausar()
+        
+        
         #listar produtos
         elif opcao == "2":
             listar_produtos()
+            pausar()
+        
+        
         #editar produto
         elif opcao == "3":
-            id_produto = int(input("\nID do produto: "))
+            id_produto = ler_inteiro("\nID do produto: ")
 
             produto = buscar_produto(id_produto)
             if produto is None:
@@ -124,8 +136,8 @@ def menu_produtos():
                 continue
 
             nome = input("Novo nome: ")
-            preco = float(input("Novo preço: R$ "))
-            estoque = int(input("Novo estoque: "))
+            preco = ler_decimal("Novo preço: R$ ")
+            estoque = ler_inteiro("Novo estoque: ")
 
             editar_produto(
                 id_produto,
@@ -133,11 +145,17 @@ def menu_produtos():
                 preco,
                 estoque
             )
+            pausar()
+        
+        
         #inativar produto
         elif opcao == "4":
             listar_produtos()
-            id_produto = int(input("\nID do produto que deseja desativar: "))
+            id_produto = ler_inteiro("\nID do produto que deseja desativar: ")
             desativar_produto(id_produto)
+            pausar()
+        
+        
         #voltar
         elif opcao == "0":
             break
@@ -150,6 +168,8 @@ def menu_produtos():
 def menu_vendas():
 
     while True:
+
+        limpar_tela()
 
         #funcao do cabecalho
         cabecalho("VENDAS")
@@ -167,34 +187,44 @@ def menu_vendas():
         if opcao == "1":
             listar_produtos()
             
-            id_produto = int(input("\nID do produto: "))
+            id_produto = ler_inteiro("\nID do produto: ")
             produto = buscar_produto(id_produto)
 
             if produto is None:
                 print("\nProduto não encontrado!")
                 continue
 
-            quantidade = int(input("Quantidade: "))
+            quantidade = ler_inteiro("Quantidade: ")
 
             adicionar_item(
                 id_produto,
                 quantidade
             )
+            pausar()
+
+
 
         elif opcao == "2":
             listar_itens()
+            pausar()
+
 
         elif opcao == "3":
             forma_pagamento = input("\nForma de pagamento: ")
             finalizar_venda(
                 forma_pagamento
             )
+            pausar()
+
 
         elif opcao == "4":
             limpar_carrinho()
+            pausar()
+
 
         elif opcao == "0":
             break
+
 
         else:
             print("\nOpção inválida.")
@@ -203,6 +233,8 @@ def menu_vendas():
 def menu_estoque():
 
     while True:
+
+        limpar_tela()
 
         #funcao do cabecalho
         cabecalho("ESTOQUE")
@@ -215,12 +247,14 @@ def menu_estoque():
         ])
 
         opcao = input("\nEscolha uma opção: ")
+
+
         #entrada estoque
         if opcao == "1":
             listar_produtos()
 
-            id_produto = int(input("\nID do produto: "))
-            quantidade = int(input("\nQuantidade: "))
+            id_produto = ler_inteiro("\nID do produto: ")
+            quantidade = ler_inteiro("\nQuantidade: ")
             observacao = input("\nObservação: ")
 
             entrada_estoque(
@@ -228,12 +262,15 @@ def menu_estoque():
                 quantidade,
                 observacao
             )
+            pausar()
         #ajuste de estoque
+
+
         elif opcao == "2":
             listar_produtos()
 
-            id_produto = int(input("\nID do produto: "))
-            novo_estoque = int(input("Novo estoque: "))
+            id_produto = ler_inteiro("\nID do produto: ")
+            novo_estoque = ler_inteiro("Novo estoque: ")
             observacao = input("Observação: ")
 
             ajustar_estoque(
@@ -241,9 +278,15 @@ def menu_estoque():
                 novo_estoque,
                 observacao
             )
+            pausar()
         #movimentações estoque
+
+
         elif opcao == "3":
             listar_movimentacoes()
+            pausar()
+
+
         #voltar
         elif opcao == "0":
             break
@@ -256,6 +299,8 @@ def menu_estoque():
 def menu_caixa():
 
     while True:
+
+        limpar_tela()
 
         #funcao do cabecalho
         cabecalho("CAIXA")
@@ -273,11 +318,15 @@ def menu_caixa():
         opcao = input("\nEscolha uma opção: ")
 
         if opcao == "1":
-            valor = float(input("\nValor inicial do caixa: R$ "))
+            valor = ler_decimal("\nValor inicial do caixa: R$ ")
             abrir_caixa(valor)
+            pausar()
+
 
         elif opcao == "2":
             fechar_caixa()
+            pausar()
+
 
         elif opcao == "3":
             caixa = caixa_aberto()
@@ -285,18 +334,24 @@ def menu_caixa():
                 print("\nNenhum caixa está aberto.")
             else:
                 print(f"\nCaixa aberto (ID {caixa[0]}).")
+                pausar()
+
 
         elif opcao == "4":
             print("\nEm desenvolvimento.")
 
+
         elif opcao == "5":
             print("\nEm desenvolvimento.")
+
 
         elif opcao == "6":
             print("\nEm desenvolvimento.")
 
+
         elif opcao == "0":
             break
+
 
         else:
             print("\nOpção inválida.")
