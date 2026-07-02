@@ -20,6 +20,12 @@ from carrinho import (
     listar_itens,
     limpar_carrinho
 )
+from utilitarios import (
+    ler_decimal,
+    ler_inteiro
+)
+
+
 from vendas import finalizar_venda
 #título com nome do sistema e versão atual
 NOME_SISTEMA = "PDV Python"
@@ -97,8 +103,8 @@ def menu_produtos():
         #cadastrar produto
         if opcao == "1":
             nome = input("\nNome do produto: ")
-            preco = float(input("Preço: R$ "))
-            estoque = int(input("Estoque inicial: "))
+            preco = ler_decimal("Preço: R$ ")
+            estoque = ler_inteiro("Estoque inicial: ")
 
             cadastrar_produto(
                 nome,

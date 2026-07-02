@@ -9,15 +9,19 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 Atualmente o sistema possui:
 
 - Cadastro de produtos
+- Edição de produtos
+- Desativação de produtos
 - Listagem de produtos
 - Controle de estoque
 - Entrada de estoque
 - Ajuste de estoque
+- Histórico de movimentações
 - Carrinho de compras
 - Finalização de vendas
 - Controle de caixa
 - Registro de movimentações de estoque
 - Banco de dados SQLite
+- Interface em terminal com menus
 
 ## Tecnologias utilizadas
 
