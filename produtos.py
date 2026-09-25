@@ -86,8 +86,8 @@ def editar_produto(
 
     produto = buscar_produto(id_produto)
 
-    if produto is None:
-        print("Produto não encontrado!")
+    if produto is None or produto[4] == 0:
+        print("Produto não encontrado ou desativado!")
         return
     
     conn = conectar()
@@ -150,6 +150,7 @@ def desativar_produto(id_produto):
 
     if produto is None:
         print("Produto não encontrado")
+        return
 
     if produto[4] == 0:
         print("Produto já está desativado!")
@@ -167,7 +168,7 @@ def desativar_produto(id_produto):
     conn.commit()
     conn.close()
 
-    print("Produto '{produto[1]}' desativado com sucesso!")
+    print(f"Produto '{produto[1]}' desativado com sucesso!")
 
 #função para ativar produto que estava desativado
 def ativar_produto(id_produto):

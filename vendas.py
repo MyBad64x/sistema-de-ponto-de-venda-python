@@ -48,6 +48,8 @@ def finalizar_venda(
         
         total += produto[2] * quantidade
 
+    total = round(total, 2)
+
     conn = conectar()
 
     sucesso = False
@@ -73,7 +75,9 @@ def finalizar_venda(
 
         for id_produto, quantidade in carrinho:
 
-            produto = buscar_produto(id_produto)
+            # lê pela mesma conexão da venda (buscar_produto abre outra conexão e enxergaria dados antigos)
+            cursor.execute("SELECT * FROM produtos WHERE id = ?", (id_produto,))
+            produto = cursor.fetchone()
 
             cursor.execute("""
                 INSERT INTO itens_vendas(
@@ -102,10 +106,10 @@ def finalizar_venda(
 
             cursor.execute("""
                 UPDATE produtos
-                SET estoque = ?
+                SET estoque = estoque - ?
                 WHERE id = ?
             """, (
-                novo_estoque,
+                quantidade,
                 id_produto
             ))
 

@@ -31,7 +31,7 @@ from utilitarios import (
 from vendas import finalizar_venda
 #título com nome do sistema e versão atual
 NOME_SISTEMA = "PDV Python"
-VERSAO = "1.2.1"
+VERSAO = "1.2.2"
 
 #função para alterar o cabeçalho inteiro sem ficar catando código em cada função
 def cabecalho(titulo):
@@ -109,8 +109,8 @@ def menu_produtos():
         #cadastrar produto
         if opcao == "1":
             nome = input("\nNome do produto: ")
-            preco = ler_decimal("Preço: R$ ")
-            estoque = ler_inteiro("Estoque inicial: ")
+            preco = ler_decimal("Preço: R$ ", minimo=0)
+            estoque = ler_inteiro("Estoque inicial: ", minimo=0)
 
             cadastrar_produto(
                 nome,
@@ -133,11 +133,12 @@ def menu_produtos():
             produto = buscar_produto(id_produto)
             if produto is None:
                 print("\nProduto não encontrado!")
+                pausar()
                 continue
 
             nome = input("Novo nome: ")
-            preco = ler_decimal("Novo preço: R$ ")
-            estoque = ler_inteiro("Novo estoque: ")
+            preco = ler_decimal("Novo preço: R$ ", minimo=0)
+            estoque = ler_inteiro("Novo estoque: ", minimo=0)
 
             editar_produto(
                 id_produto,
@@ -162,6 +163,7 @@ def menu_produtos():
 
         else:
             print("\nOpção inválida.")
+            pausar()
 
 
 #função para o modulo de vendas
@@ -192,9 +194,10 @@ def menu_vendas():
 
             if produto is None:
                 print("\nProduto não encontrado!")
+                pausar()
                 continue
 
-            quantidade = ler_inteiro("Quantidade: ")
+            quantidade = ler_inteiro("Quantidade: ", minimo=1)
 
             adicionar_item(
                 id_produto,
@@ -228,6 +231,7 @@ def menu_vendas():
 
         else:
             print("\nOpção inválida.")
+            pausar()
 
 #função para o módulo de estoque
 def menu_estoque():
@@ -254,7 +258,7 @@ def menu_estoque():
             listar_produtos()
 
             id_produto = ler_inteiro("\nID do produto: ")
-            quantidade = ler_inteiro("\nQuantidade: ")
+            quantidade = ler_inteiro("\nQuantidade: ", minimo=1)
             observacao = input("\nObservação: ")
 
             entrada_estoque(
@@ -270,7 +274,7 @@ def menu_estoque():
             listar_produtos()
 
             id_produto = ler_inteiro("\nID do produto: ")
-            novo_estoque = ler_inteiro("Novo estoque: ")
+            novo_estoque = ler_inteiro("Novo estoque: ", minimo=0)
             observacao = input("Observação: ")
 
             ajustar_estoque(
@@ -293,6 +297,7 @@ def menu_estoque():
 
         else:
             print("\nOpção inválida.")
+            pausar()
 
 
 #função do modulo de caixa
@@ -318,7 +323,7 @@ def menu_caixa():
         opcao = input("\nEscolha uma opção: ")
 
         if opcao == "1":
-            valor = ler_decimal("\nValor inicial do caixa: R$ ")
+            valor = ler_decimal("\nValor inicial do caixa: R$ ", minimo=0)
             abrir_caixa(valor)
             pausar()
 
@@ -334,19 +339,22 @@ def menu_caixa():
                 print("\nNenhum caixa está aberto.")
             else:
                 print(f"\nCaixa aberto (ID {caixa[0]}).")
-                pausar()
+            pausar()
 
 
         elif opcao == "4":
             print("\nEm desenvolvimento.")
+            pausar()
 
 
         elif opcao == "5":
             print("\nEm desenvolvimento.")
+            pausar()
 
 
         elif opcao == "6":
             print("\nEm desenvolvimento.")
+            pausar()
 
 
         elif opcao == "0":
@@ -355,3 +363,4 @@ def menu_caixa():
 
         else:
             print("\nOpção inválida.")
+            pausar()

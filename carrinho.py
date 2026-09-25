@@ -11,13 +11,23 @@ def adicionar_item(id_produto, quantidade):
         print("Abra o caixa antes de iniciar uma venda!")
         return
 
+    if quantidade <= 0:
+        print("A quantidade deve ser maior que zero!")
+        return
+
     produto = buscar_produto(id_produto)
 
-    if produto is None:
-        print("Produto não encontrado!")
+    if produto is None or produto[4] == 0:
+        print("Produto não encontrado ou desativado!")
         return
-    
-    carrinho.append((id_produto, quantidade))
+
+    # se o produto já está no carrinho, soma a quantidade em vez de criar outra linha
+    for indice, (id_item, qtd_item) in enumerate(carrinho):
+        if id_item == id_produto:
+            carrinho[indice] = (id_item, qtd_item + quantidade)
+            break
+    else:
+        carrinho.append((id_produto, quantidade))
 
     print(f"{produto[1]} adicionado ao carrinho!")
 

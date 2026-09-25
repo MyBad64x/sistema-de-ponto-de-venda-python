@@ -1,10 +1,13 @@
 import sqlite3
 import os
 
+# caminho do banco fixo em relação a este arquivo (não depende da pasta de onde o programa é executado)
+PASTA_BANCO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database")
+CAMINHO_BANCO = os.path.join(PASTA_BANCO, "loja.db")
+
 def conectar():
-    os.makedirs("database", exist_ok=True)
-    caminho = os.path.abspath("database/loja.db")
-    return sqlite3.connect(caminho)
+    os.makedirs(PASTA_BANCO, exist_ok=True)
+    return sqlite3.connect(CAMINHO_BANCO)
 
 def criar_tabelas():
     conn = conectar()
@@ -37,6 +40,7 @@ def criar_tabelas():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS vendas(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caixa_id INTEGER,
         valor_total REAL,
         forma_pagamento TEXT,
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -66,6 +70,11 @@ def criar_tabelas():
         status TEXT NOT NULL
     )
     """)
+
+    # bancos criados antes da coluna caixa_id existir precisam recebê-la
+    colunas_vendas = [coluna[1] for coluna in cursor.execute("PRAGMA table_info(vendas)")]
+    if "caixa_id" not in colunas_vendas:
+        cursor.execute("ALTER TABLE vendas ADD COLUMN caixa_id INTEGER")
 
     conn.commit()
     conn.close()
