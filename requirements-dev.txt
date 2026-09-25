@@ -1,0 +1,2 @@
+# Dependências para desenvolvimento (o sistema em si usa só a biblioteca padrão do Python)
+pytest>=8
