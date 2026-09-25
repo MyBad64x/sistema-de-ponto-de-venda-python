@@ -24,3 +24,5 @@ env/
 # Sistema Operacional
 .DS_Store
 Thumbs.db
+# Testes
+.pytest_cache/

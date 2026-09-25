@@ -11,6 +11,59 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.3.0] - 2026-09-25
+
+### Adicionado
+
+- Testes automáticos com pytest (`testes/`), usando banco temporário.
+- Reativar produto desativado.
+- Remover um item do carrinho.
+- Status do caixa mostra valor inicial, quantidade e total de vendas.
+- Forma de pagamento escolhida de uma lista (Dinheiro, PIX, Cartão de débito, Cartão de crédito).
+- Venda com estoque insuficiente pergunta se deve vender mesmo assim.
+- Confirmação antes de desativar produto, limpar carrinho e fechar caixa.
+- Estoque inicial do cadastro entra no histórico de movimentações.
+
+### Alterado
+
+- Código organizado no pacote `pdv/` com a interface em `pdv/terminal/`.
+- Regras de negócio não usam mais `print`/`input`: devolvem resultados e levantam `ErroPDV`.
+- Conexão com o banco centralizada em `conexao()` (commit, rollback e fechamento automáticos).
+- Colunas acessadas pelo nome (`produto["nome"]`) em vez do índice (`produto[1]`).
+- Editar produto altera só nome e preço; estoque muda apenas por Entrada ou Ajuste.
+- Valores aceitam vírgula (12,50) e são exibidos no padrão brasileiro (R$ 1.234,50).
+- Datas exibidas no horário local.
+- Produtos listados em ordem alfabética; movimentações mostram as 50 mais recentes.
+
+### Corrigido
+
+- Alteração de estoque e registro da movimentação agora são gravados na mesma transação.
+- Mensagens de erro não somem mais da tela antes de serem lidas.
+- Ctrl+C encerra o sistema sem mostrar erro.
+
+### Removido
+
+- `zerar_estoque` e `limpar_movimentacoes` (não eram usadas e apagavam dados sem registro).
+- `testes/teste_tabelas.py` (substituído pelos testes automáticos).
+
+---
+
+## [1.2.2] - 2026-09-25
+
+### Corrigido
+
+- O banco não era criado ao rodar o `main.py` (erro `no such table: produtos`).
+- Toda venda falhava e fechar o caixa derrubava o sistema: faltava a coluna `caixa_id` na tabela `vendas`. Bancos antigos recebem a coluna automaticamente.
+- O mesmo produto adicionado duas vezes no carrinho permitia vender além do estoque e gravava o estoque errado.
+- Quantidade zero ou negativa era aceita no carrinho e na entrada de estoque.
+- Desativar um ID inexistente derrubava o sistema; a mensagem de sucesso não mostrava o nome do produto.
+- Produto desativado podia ser vendido.
+- Preço, estoque e valor do caixa aceitavam valores negativos.
+- O banco dependia da pasta de onde o programa era executado.
+- Total da venda gravado com erro de arredondamento (ex.: 0.30000000000000004).
+
+---
+
 ## [1.2.1] - 2026-06-30
 
 ### Adicionado
