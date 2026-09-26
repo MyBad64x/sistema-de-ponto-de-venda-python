@@ -76,7 +76,19 @@ def criar_tabelas():
                 valor_inicial REAL NOT NULL,
                 data_fechamento TIMESTAMP,
                 valor_final REAL,
+                valor_contado REAL,
                 status TEXT NOT NULL
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS movimentacoes_caixa(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                caixa_id INTEGER NOT NULL,
+                tipo TEXT NOT NULL,
+                valor REAL NOT NULL,
+                motivo TEXT,
+                data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -114,6 +126,12 @@ def _atualizar_banco_antigo(conn):
     # v1.2.2: vendas passou a guardar em qual caixa aconteceu
     if "caixa_id" not in colunas_vendas:
         conn.execute("ALTER TABLE vendas ADD COLUMN caixa_id INTEGER")
+
+    colunas_caixa = {coluna["name"] for coluna in conn.execute("PRAGMA table_info(caixa)")}
+
+    # v1.4.0: fechamento guarda quanto dinheiro foi contado na gaveta
+    if "valor_contado" not in colunas_caixa:
+        conn.execute("ALTER TABLE caixa ADD COLUMN valor_contado REAL")
 
 
 if __name__ == "__main__":

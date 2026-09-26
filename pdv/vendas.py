@@ -3,13 +3,13 @@
 from dataclasses import dataclass, field
 
 from pdv.banco import conexao
-from pdv.caixa import ABERTO
+from pdv.caixa import ABERTO, DINHEIRO
 from pdv.erros import ErroPDV, EstoqueInsuficiente
 from pdv.movimentacoes import VENDA, registrar_movimentacao
 from pdv.produtos import obter_produto
 
 FORMAS_PAGAMENTO = (
-    "Dinheiro",
+    DINHEIRO,
     "PIX",
     "Cartão de débito",
     "Cartão de crédito",

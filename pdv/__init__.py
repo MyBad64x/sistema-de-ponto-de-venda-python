@@ -12,4 +12,4 @@ terminal por uma interface gráfica sem reescrever a lógica.
 """
 
 NOME_SISTEMA = "PDV Python"
-VERSAO = "1.3.0"
+VERSAO = "1.4.0"

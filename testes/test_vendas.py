@@ -144,7 +144,7 @@ def test_caixa_fechado_no_meio_da_venda(caixa, carrinho, coca):
     from pdv.caixa import fechar_caixa
 
     carrinho.adicionar(coca, 1)
-    fechar_caixa()
+    fechar_caixa(100)
 
     with pytest.raises(ErroPDV, match="Abra o caixa"):
         finalizar_venda(carrinho, "PIX")

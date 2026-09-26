@@ -1,6 +1,13 @@
 import pytest
 
-from pdv.caixa import abrir_caixa, caixa_aberto, fechar_caixa, resumo_caixa_aberto
+from pdv.caixa import (
+    abrir_caixa,
+    caixa_aberto,
+    fechar_caixa,
+    registrar_sangria,
+    registrar_suprimento,
+    resumo_caixa_aberto,
+)
 from pdv.erros import ErroPDV
 from pdv.vendas import finalizar_venda
 
@@ -23,7 +30,7 @@ def test_valor_inicial_negativo():
 
 def test_fechar_sem_caixa_aberto():
     with pytest.raises(ErroPDV, match="Nenhum caixa"):
-        fechar_caixa()
+        fechar_caixa(0)
 
 
 def test_status_sem_caixa_aberto():
@@ -32,11 +39,11 @@ def test_status_sem_caixa_aberto():
 
 
 def test_fechar_caixa_sem_vendas(caixa):
-    """Antes: OperationalError no such column: caixa_id."""
-    resumo = fechar_caixa()
+    resumo = fechar_caixa(100)
 
     assert resumo.total_vendas == 0
-    assert resumo.saldo == 100
+    assert resumo.dinheiro_esperado == 100
+    assert resumo.diferenca == 0
     assert caixa_aberto() is None
 
 
@@ -44,7 +51,7 @@ def test_fechamento_conta_so_as_vendas_do_proprio_caixa(carrinho, coca):
     abrir_caixa(100)
     carrinho.adicionar(coca, 1)
     finalizar_venda(carrinho, "Dinheiro")
-    fechar_caixa()
+    fechar_caixa(112.50)
 
     abrir_caixa(50)
     carrinho.adicionar(coca, 2)
@@ -54,5 +61,92 @@ def test_fechamento_conta_so_as_vendas_do_proprio_caixa(carrinho, coca):
     assert resumo.quantidade_vendas == 1
     assert resumo.total_vendas == 25.0
 
-    resumo = fechar_caixa()
-    assert resumo.saldo == 75.0
+
+# ---------------------------------------------------------------- gaveta
+
+def test_so_vendas_em_dinheiro_entram_na_gaveta(caixa, carrinho, coca, bala):
+    carrinho.adicionar(coca, 2)  # 25,00 no PIX
+    finalizar_venda(carrinho, "PIX")
+    carrinho.adicionar(bala, 10)  # 1,00 em dinheiro
+    finalizar_venda(carrinho, "Dinheiro")
+
+    resumo = resumo_caixa_aberto()
+
+    assert resumo.vendas_por_forma == {"PIX": 25.0, "Dinheiro": 1.0}
+    assert resumo.total_vendas == 26.0
+    assert resumo.dinheiro_esperado == 101.0  # 100 inicial + 1 em dinheiro
+
+
+def test_sangria_e_suprimento_mexem_no_dinheiro_esperado(caixa):
+    registrar_suprimento(50, "Reforço de troco")
+    resumo = registrar_sangria(30, "Depósito no banco")
+
+    assert resumo.suprimentos == 50
+    assert resumo.sangrias == 30
+    assert resumo.dinheiro_esperado == 120  # 100 + 50 - 30
+
+
+def test_varias_sangrias_somam(caixa):
+    registrar_sangria(10, "A")
+    resumo = registrar_sangria(15.5, "B")
+    assert resumo.sangrias == 25.5
+
+
+def test_sangria_maior_que_a_gaveta(caixa):
+    with pytest.raises(ErroPDV, match="maior que o dinheiro"):
+        registrar_sangria(100.01, "Depósito")
+
+    # pode tirar exatamente o que tem
+    assert registrar_sangria(100, "Depósito").dinheiro_esperado == 0
+
+
+@pytest.mark.parametrize("valor", [0, -5])
+def test_valor_zero_ou_negativo(caixa, valor):
+    with pytest.raises(ErroPDV, match="maior que zero"):
+        registrar_suprimento(valor, "X")
+    with pytest.raises(ErroPDV, match="maior que zero"):
+        registrar_sangria(valor, "X")
+
+
+def test_motivo_obrigatorio(caixa):
+    with pytest.raises(ErroPDV, match="motivo"):
+        registrar_sangria(10, "   ")
+
+
+def test_sangria_sem_caixa_aberto():
+    with pytest.raises(ErroPDV, match="Nenhum caixa"):
+        registrar_sangria(10, "X")
+
+
+def test_movimentos_de_um_caixa_nao_passam_para_o_proximo(caixa):
+    registrar_suprimento(50, "Troco")
+    fechar_caixa(150)
+
+    abrir_caixa(80)
+    resumo = resumo_caixa_aberto()
+    assert (resumo.suprimentos, resumo.sangrias) == (0, 0)
+    assert resumo.dinheiro_esperado == 80
+
+
+# ---------------------------------------------------------------- conferência
+
+@pytest.mark.parametrize("contado, diferenca", [
+    (120, 0),     # bateu
+    (118, -2),    # faltou
+    (125.5, 5.5), # sobrou
+])
+def test_conferencia_no_fechamento(caixa, contado, diferenca):
+    registrar_suprimento(50, "Troco")
+    registrar_sangria(30, "Banco")
+
+    resumo = fechar_caixa(contado)
+
+    assert resumo.dinheiro_esperado == 120
+    assert resumo.valor_contado == contado
+    assert resumo.diferenca == diferenca
+
+
+def test_valor_contado_negativo(caixa):
+    with pytest.raises(ErroPDV):
+        fechar_caixa(-1)
+    assert caixa_aberto() is not None

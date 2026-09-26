@@ -1,4 +1,4 @@
-"""Abertura, consulta e fechamento de caixa."""
+"""Abertura, sangria, suprimento, consulta e fechamento de caixa."""
 
 from dataclasses import dataclass
 
@@ -8,6 +8,12 @@ from pdv.erros import ErroPDV
 ABERTO = "ABERTO"
 FECHADO = "FECHADO"
 
+SANGRIA = "SANGRIA"
+SUPRIMENTO = "SUPRIMENTO"
+
+# só as vendas em dinheiro entram fisicamente na gaveta
+DINHEIRO = "Dinheiro"
+
 
 @dataclass
 class ResumoCaixa:
@@ -15,11 +21,32 @@ class ResumoCaixa:
     data_abertura: str
     valor_inicial: float
     quantidade_vendas: int
-    total_vendas: float
+    vendas_por_forma: dict  # {"Dinheiro": 20.0, "PIX": 25.0}
+    suprimentos: float
+    sangrias: float
+    valor_contado: float = None  # só existe depois do fechamento
 
     @property
-    def saldo(self):
-        return round(self.valor_inicial + self.total_vendas, 2)
+    def total_vendas(self):
+        return round(sum(self.vendas_por_forma.values()), 2)
+
+    @property
+    def vendas_dinheiro(self):
+        return self.vendas_por_forma.get(DINHEIRO, 0)
+
+    @property
+    def dinheiro_esperado(self):
+        """Quanto deveria haver na gaveta agora."""
+        return round(
+            self.valor_inicial + self.vendas_dinheiro + self.suprimentos - self.sangrias, 2
+        )
+
+    @property
+    def diferenca(self):
+        """Contado - esperado. Positivo = sobra, negativo = falta."""
+        if self.valor_contado is None:
+            return None
+        return round(self.valor_contado - self.dinheiro_esperado, 2)
 
 
 def _caixa_aberto(conn):
@@ -30,19 +57,39 @@ def _caixa_aberto(conn):
     """, (ABERTO,)).fetchone()
 
 
+def _exigir_caixa_aberto(conn):
+    caixa = _caixa_aberto(conn)
+    if caixa is None:
+        raise ErroPDV("Nenhum caixa está aberto.")
+    return caixa
+
+
 def _resumir(conn, caixa):
     vendas = conn.execute("""
-        SELECT COUNT(*) AS quantidade, COALESCE(SUM(valor_total), 0) AS total
+        SELECT forma_pagamento, COUNT(*) AS quantidade, SUM(valor_total) AS total
         FROM vendas
         WHERE caixa_id = ?
-    """, (caixa["id"],)).fetchone()
+        GROUP BY forma_pagamento
+    """, (caixa["id"],)).fetchall()
+
+    movimentos = conn.execute("""
+        SELECT tipo, SUM(valor) AS total
+        FROM movimentacoes_caixa
+        WHERE caixa_id = ?
+        GROUP BY tipo
+    """, (caixa["id"],)).fetchall()
+    totais_movimentos = {linha["tipo"]: linha["total"] for linha in movimentos}
 
     return ResumoCaixa(
         id_caixa=caixa["id"],
         data_abertura=caixa["data_abertura"],
         valor_inicial=caixa["valor_inicial"],
-        quantidade_vendas=vendas["quantidade"],
-        total_vendas=round(vendas["total"], 2),
+        quantidade_vendas=sum(linha["quantidade"] for linha in vendas),
+        vendas_por_forma={
+            linha["forma_pagamento"]: round(linha["total"], 2) for linha in vendas
+        },
+        suprimentos=round(totais_movimentos.get(SUPRIMENTO, 0), 2),
+        sangrias=round(totais_movimentos.get(SANGRIA, 0), 2),
     )
 
 
@@ -68,27 +115,66 @@ def abrir_caixa(valor_inicial):
     return cursor.lastrowid
 
 
-def resumo_caixa_aberto():
-    """Situação do caixa aberto até agora (para a opção 'Status do caixa')."""
+def _movimentar_caixa(tipo, valor, motivo):
+    if valor <= 0:
+        raise ErroPDV("O valor deve ser maior que zero.")
+
+    motivo = (motivo or "").strip()
+    if not motivo:
+        raise ErroPDV("Informe o motivo.")
+
+    valor = round(valor, 2)
+
     with conexao() as conn:
-        caixa = _caixa_aberto(conn)
-        if caixa is None:
-            raise ErroPDV("Nenhum caixa está aberto.")
+        caixa = _exigir_caixa_aberto(conn)
+
+        if tipo == SANGRIA:
+            disponivel = _resumir(conn, caixa).dinheiro_esperado
+            if valor > disponivel:
+                raise ErroPDV("O valor da sangria é maior que o dinheiro na gaveta.")
+
+        conn.execute(
+            "INSERT INTO movimentacoes_caixa(caixa_id, tipo, valor, motivo) VALUES (?, ?, ?, ?)",
+            (caixa["id"], tipo, valor, motivo),
+        )
+
         return _resumir(conn, caixa)
 
 
-def fechar_caixa():
+def registrar_sangria(valor, motivo):
+    """Retirada de dinheiro da gaveta (ex.: levar ao banco, pagar fornecedor)."""
+    return _movimentar_caixa(SANGRIA, valor, motivo)
+
+
+def registrar_suprimento(valor, motivo):
+    """Entrada de dinheiro na gaveta que não é venda (ex.: reforço de troco)."""
+    return _movimentar_caixa(SUPRIMENTO, valor, motivo)
+
+
+def resumo_caixa_aberto():
+    """Situação do caixa aberto até agora (para a opção 'Status do caixa')."""
     with conexao() as conn:
-        caixa = _caixa_aberto(conn)
-        if caixa is None:
-            raise ErroPDV("Nenhum caixa está aberto.")
+        return _resumir(conn, _exigir_caixa_aberto(conn))
+
+
+def fechar_caixa(valor_contado):
+    """Fecha o caixa guardando o valor esperado e o valor contado na gaveta."""
+    if valor_contado < 0:
+        raise ErroPDV("O valor contado não pode ser negativo.")
+
+    with conexao() as conn:
+        caixa = _exigir_caixa_aberto(conn)
 
         resumo = _resumir(conn, caixa)
+        resumo.valor_contado = round(valor_contado, 2)
 
         conn.execute("""
             UPDATE caixa
-            SET valor_final = ?, data_fechamento = CURRENT_TIMESTAMP, status = ?
+            SET valor_final = ?,
+                valor_contado = ?,
+                data_fechamento = CURRENT_TIMESTAMP,
+                status = ?
             WHERE id = ?
-        """, (resumo.saldo, FECHADO, caixa["id"]))
+        """, (resumo.dinheiro_esperado, resumo.valor_contado, FECHADO, caixa["id"]))
 
     return resumo

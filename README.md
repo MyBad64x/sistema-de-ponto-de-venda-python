@@ -20,7 +20,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Aviso de estoque insuficiente, com opção de vender mesmo assim
 
 **Caixa**
-- Abertura, status e fechamento de caixa com resumo das vendas
+- Abertura, sangria, suprimento, status e fechamento com conferência do dinheiro
 
 **Geral**
 - Banco de dados SQLite criado automaticamente
@@ -107,8 +107,6 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
-- Sangria e suprimento de caixa
-- Fechamento de caixa aprimorado (separado por forma de pagamento, conferência do dinheiro)
 - Histórico de caixas
 - Relatórios (vendas por período, produtos mais vendidos)
 - Troco no pagamento em dinheiro
