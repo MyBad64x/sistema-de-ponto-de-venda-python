@@ -1,3 +1,4 @@
+from datetime import date
 import pytest
 
 from pdv.terminal import utilitarios
@@ -52,3 +53,15 @@ def test_dinheiro(valor, esperado):
 def test_cortar():
     assert cortar("curto", 10) == "curto"
     assert cortar("um nome de produto bem longo", 10) == "um nome d…"
+
+
+def test_data_br():
+    assert utilitarios.data_br("2026-09-05") == "05/09/2026"
+    assert utilitarios.data_br(date(2026, 12, 31)) == "31/12/2026"
+
+
+def test_ler_data_repete_ate_data_valida(monkeypatch, capsys):
+    _digitar(monkeypatch, "2026-09-26", "31/02/2026", "26/09/2026")
+
+    assert utilitarios.ler_data("Data: ") == date(2026, 9, 26)
+    assert capsys.readouterr().out.count("Data inválida") == 2

@@ -1,6 +1,7 @@
 """Funções de apoio para ler e mostrar dados no terminal."""
 
 import os
+from datetime import date, datetime
 
 LARGURA = 60
 
@@ -35,6 +36,13 @@ def dinheiro(valor):
     """Formata no padrão brasileiro: 1234.5 -> 'R$ 1.234,50'."""
     texto = f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"R$ {texto}"
+
+
+def data_br(valor):
+    """Formata uma data no padrão brasileiro: '2026-09-26' ou date -> '26/09/2026'."""
+    if isinstance(valor, str):
+        valor = date.fromisoformat(valor)
+    return valor.strftime("%d/%m/%Y")
 
 
 def _mensagem_minimo(minimo):
@@ -114,3 +122,13 @@ def escolher(mensagem, opcoes):
 def confirmar(mensagem):
     resposta = input(f"{mensagem} (s/n): ").strip().lower()
     return resposta in ("s", "sim")
+
+
+def ler_data(mensagem):
+    """Lê uma data no formato dd/mm/aaaa, repetindo até receber uma válida."""
+    while True:
+        texto = input(mensagem).strip()
+        try:
+            return datetime.strptime(texto, "%d/%m/%Y").date()
+        except ValueError:
+            print("\nData inválida. Use o formato dd/mm/aaaa (ex.: 26/09/2026).")
