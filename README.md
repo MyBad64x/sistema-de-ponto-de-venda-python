@@ -22,6 +22,9 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 **Caixa**
 - Abertura, sangria, suprimento, status, fechamento com conferência do dinheiro e histórico de caixas
 
+**Relatórios**
+- Resumo de vendas, produtos mais vendidos e vendas por dia, por período
+
 **Geral**
 - Banco de dados SQLite criado automaticamente
 - Interface em terminal com menus
@@ -50,6 +53,7 @@ sistema-de-ponto-de-venda-python/
 │   ├── caixa.py             # abertura e fechamento de caixa
 │   ├── carrinho.py          # carrinho da venda em andamento
 │   ├── vendas.py            # finalização de vendas
+│   ├── relatorios.py        # relatórios de vendas por período
 │   │
 │   └── terminal/            # interface de terminal
 │       ├── menu.py          # menus e ações
@@ -107,7 +111,6 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
-- Relatórios (vendas por período, produtos mais vendidos)
 - Troco no pagamento em dinheiro
 - Login de usuários
 - Backup do banco de dados

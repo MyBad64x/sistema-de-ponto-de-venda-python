@@ -28,14 +28,27 @@ from pdv.produtos import (
     editar_produto,
     listar_produtos,
 )
+from pdv.relatorios import (
+    Periodo,
+    periodo_hoje,
+    periodo_mes_atual,
+    periodo_ultimos_dias,
+    produtos_mais_vendidos,
+    resumo_vendas,
+    vendas_por_dia,
+)
 from pdv.terminal.tabelas import (
     mostrar_carrinho,
     mostrar_historico_caixas,
     mostrar_movimentacoes,
     mostrar_produtos,
     mostrar_resumo_caixa,
+    mostrar_produtos_mais_vendidos,
+    mostrar_resumo_vendas,
+    mostrar_vendas_por_dia,
 )
 from pdv.terminal.utilitarios import (
+    data_br,
     cabecalho,
     confirmar,
     dinheiro,
@@ -46,6 +59,7 @@ from pdv.terminal.utilitarios import (
     limpar_tela,
     mostrar_opcoes,
     pausar,
+    ler_data,
 )
 from pdv.vendas import FORMAS_PAGAMENTO, finalizar_venda
 
@@ -55,6 +69,8 @@ carrinho = Carrinho()
 MOVIMENTACOES_NA_TELA = 50
 
 CAIXAS_NA_TELA = 20
+
+PRODUTOS_NO_RANKING = 10
 
 
 def executar_menu(titulo, opcoes, texto_sair="Voltar", pausar_apos_acao=True):
@@ -99,6 +115,7 @@ def menu_principal():
             ("2", "Vendas", menu_vendas),
             ("3", "Estoque", menu_estoque),
             ("4", "Caixa", menu_caixa),
+            ("5", "Relatórios", menu_relatorios),
         ],
         texto_sair="Sair",
         # as opções do menu principal abrem submenus; ao voltar deles não precisa pausar
@@ -143,6 +160,14 @@ def menu_caixa():
         ("4", "Sangria", sangria),
         ("5", "Suprimento", suprimento),
         ("6", "Histórico de caixas", historico),
+    ])
+
+
+def menu_relatorios():
+    executar_menu("RELATÓRIOS", [
+        ("1", "Resumo de vendas", relatorio_resumo),
+        ("2", "Produtos mais vendidos", relatorio_produtos),
+        ("3", "Vendas por dia", relatorio_por_dia),
     ])
 
 
@@ -366,3 +391,46 @@ def historico():
 
     if id_caixa != 0:
         mostrar_resumo_caixa(detalhar_caixa(id_caixa), f"RESUMO DO CAIXA #{id_caixa}")
+
+
+# ---------------------------------------------------------------- relatórios
+
+def _escolher_periodo():
+    print("\nPeríodo:")
+    opcao = escolher("Escolha: ", ("Hoje", "Últimos 7 dias", "Este mês", "Outro período"))
+
+    if opcao == "Hoje":
+        return periodo_hoje()
+    if opcao == "Últimos 7 dias":
+        return periodo_ultimos_dias(7)
+    if opcao == "Este mês":
+        return periodo_mes_atual()
+
+    inicio = ler_data("\nData inicial (dd/mm/aaaa): ")
+    fim = ler_data("Data final (dd/mm/aaaa): ")
+    return Periodo(inicio, fim)
+
+
+def _titulo_periodo(titulo, periodo):
+    if periodo.inicio == periodo.fim:
+        print(f"\n{titulo} - {data_br(periodo.inicio)}")
+    else:
+        print(f"\n{titulo} - {data_br(periodo.inicio)} a {data_br(periodo.fim)}")
+
+
+def relatorio_resumo():
+    periodo = _escolher_periodo()
+    _titulo_periodo("RESUMO DE VENDAS", periodo)
+    mostrar_resumo_vendas(resumo_vendas(periodo))
+
+
+def relatorio_produtos():
+    periodo = _escolher_periodo()
+    _titulo_periodo(f"TOP {PRODUTOS_NO_RANKING} PRODUTOS", periodo)
+    mostrar_produtos_mais_vendidos(produtos_mais_vendidos(periodo, PRODUTOS_NO_RANKING))
+
+
+def relatorio_por_dia():
+    periodo = _escolher_periodo()
+    _titulo_periodo("VENDAS POR DIA", periodo)
+    mostrar_vendas_por_dia(vendas_por_dia(periodo))

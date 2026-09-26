@@ -11,6 +11,17 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.6.0] - 2026-09-26
+
+### Adicionado
+
+- Menu de relatórios com escolha de período (hoje, últimos 7 dias, este mês ou datas informadas).
+- Resumo de vendas: total, quantidade, ticket médio e divisão por forma de pagamento.
+- Produtos mais vendidos: top 10 por quantidade, com faturamento pelo preço do momento da venda.
+- Vendas por dia, com barra proporcional ao total.
+
+---
+
 ## [1.5.0] - 2026-09-26
 
 ### Adicionado

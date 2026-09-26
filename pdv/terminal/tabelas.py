@@ -1,6 +1,6 @@
 """Tabelas exibidas no terminal."""
 
-from pdv.terminal.utilitarios import cortar, dinheiro
+from pdv.terminal.utilitarios import cortar, data_br, dinheiro
 
 
 def mostrar_produtos(produtos, mostrar_status=False):
@@ -148,3 +148,72 @@ def mostrar_historico_caixas(caixas):
         )
 
     print("=" * largura)
+
+
+def mostrar_resumo_vendas(resumo):
+    if resumo.quantidade_vendas == 0:
+        print("\nNenhuma venda no período.")
+        return
+
+    print("\n" + "=" * 60)
+    print(f"{'FORMA DE PAGAMENTO':<22}| {'VENDAS':<7}| {'TOTAL':<15}| %")
+    print("=" * 60)
+
+    for linha in resumo.por_forma:
+        percentual = f"{linha['total'] / resumo.total * 100:.1f}%".replace(".", ",")
+        print(
+            f"{linha['forma_pagamento']:<22}"
+            f"| {linha['quantidade']:<7}"
+            f"| {dinheiro(linha['total']):<15}"
+            f"| {percentual}"
+        )
+
+    print("=" * 60)
+    print(f"Vendas       : {resumo.quantidade_vendas}")
+    print(f"Total        : {dinheiro(resumo.total)}")
+    print(f"Ticket médio : {dinheiro(resumo.ticket_medio)}")
+    print("=" * 60)
+
+
+def mostrar_produtos_mais_vendidos(ranking):
+    if not ranking:
+        print("\nNenhuma venda no período.")
+        return
+
+    print("\n" + "=" * 60)
+    print(f"{'#':<4}| {'PRODUTO':<25}| {'QTD':<8}| FATURAMENTO")
+    print("=" * 60)
+
+    for posicao, linha in enumerate(ranking, start=1):
+        print(
+            f"{posicao:<4}"
+            f"| {cortar(linha['nome'], 24):<25}"
+            f"| {linha['quantidade']:<8}"
+            f"| {dinheiro(linha['faturamento'])}"
+        )
+
+    print("=" * 60)
+
+
+def mostrar_vendas_por_dia(dias, largura_barra=30):
+    if not dias:
+        print("\nNenhuma venda no período.")
+        return
+
+    maior_total = max(linha["total"] for linha in dias)
+
+    print("\n" + "=" * 75)
+    print(f"{'DIA':<12}| {'VENDAS':<7}| {'TOTAL':<15}|")
+    print("=" * 75)
+
+    for linha in dias:
+        # a barra do maior dia ocupa a largura toda; as outras são proporcionais
+        tamanho = round(linha["total"] / maior_total * largura_barra) if maior_total > 0 else 0
+        print(
+            f"{data_br(linha['dia']):<12}"
+            f"| {linha['quantidade']:<7}"
+            f"| {dinheiro(linha['total']):<15}"
+            f"| {'█' * tamanho}"
+        )
+
+    print("=" * 75)
