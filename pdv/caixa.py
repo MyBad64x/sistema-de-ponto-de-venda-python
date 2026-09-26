@@ -178,3 +178,56 @@ def fechar_caixa(valor_contado):
         """, (resumo.dinheiro_esperado, resumo.valor_contado, FECHADO, caixa["id"]))
 
     return resumo
+
+
+def listar_caixas(limite=None):
+    """Histórico de caixas, do mais recente para o mais antigo.
+
+    Uma consulta só traz cada caixa com a quantidade e o total das vendas dele.
+    O LEFT JOIN mantém na lista os caixas que não tiveram nenhuma venda.
+    """
+    sql = """
+        SELECT
+            c.id,
+            c.status,
+            strftime('%d/%m/%Y %H:%M', c.data_abertura, 'localtime') AS abertura,
+            strftime('%d/%m/%Y %H:%M', c.data_fechamento, 'localtime') AS fechamento,
+            COUNT(v.id) AS quantidade_vendas,
+            ROUND(COALESCE(SUM(v.valor_total), 0), 2) AS total_vendas,
+            c.valor_final AS esperado,
+            c.valor_contado AS contado,
+            ROUND(c.valor_contado - c.valor_final, 2) AS diferenca
+        FROM caixa c
+        LEFT JOIN vendas v ON v.caixa_id = c.id
+        GROUP BY c.id
+        ORDER BY c.id DESC
+    """
+    parametros = ()
+    if limite is not None:
+        sql += " LIMIT ?"
+        parametros = (limite,)
+
+    with conexao() as conn:
+        return conn.execute(sql, parametros).fetchall()
+
+
+def detalhar_caixa(id_caixa):
+    """Resumo completo de qualquer caixa, aberto ou fechado."""
+    with conexao() as conn:
+        caixa = conn.execute("""
+            SELECT
+                id,
+                valor_inicial,
+                valor_contado,
+                datetime(data_abertura, 'localtime') AS data_abertura
+            FROM caixa
+            WHERE id = ?
+        """, (id_caixa,)).fetchone()
+
+        if caixa is None:
+            raise ErroPDV(f"Caixa {id_caixa} não encontrado.")
+
+        resumo = _resumir(conn, caixa)
+        resumo.valor_contado = caixa["valor_contado"]
+
+    return resumo
