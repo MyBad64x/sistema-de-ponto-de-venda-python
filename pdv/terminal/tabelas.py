@@ -118,7 +118,7 @@ def mostrar_resumo_caixa(resumo, titulo):
     print("=" * 50)
 
 
-def _dinheiro_ou_troco(valor):
+def _dinheiro_ou_traco(valor):
     return "-" if valor is None else dinheiro(valor)
 
 
@@ -142,9 +142,9 @@ def mostrar_historico_caixas(caixas):
             f"| {caixa['fechamento'] or 'ABERTO':<17}"
             f"| {caixa['quantidade_vendas']:<7}"
             f"| {dinheiro(caixa['total_vendas']):<14}"
-            f"| {_dinheiro_ou_troco(caixa['esperado']):<14}"
-            f"| {_dinheiro_ou_troco(caixa['contado']):<14}"
-            f"| {_dinheiro_ou_troco(caixa['diferenca'])}"
+            f"| {_dinheiro_ou_traco(caixa['esperado']):<14}"
+            f"| {_dinheiro_ou_traco(caixa['contado']):<14}"
+            f"| {_dinheiro_ou_traco(caixa['diferenca'])}"
         )
 
     print("=" * largura)
