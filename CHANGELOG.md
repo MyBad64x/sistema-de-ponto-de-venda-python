@@ -11,6 +11,25 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.4.0] - 2026-09-25
+
+### Adicionado
+
+- Sangria (retirada) e suprimento (entrada) de dinheiro no caixa, com motivo obrigatório.
+- Conferência no fechamento: o operador informa o valor contado na gaveta e o sistema mostra sobra ou falta.
+- Resumo do caixa separado por forma de pagamento.
+
+### Alterado
+
+- O dinheiro esperado na gaveta considera só dinheiro físico: valor inicial + vendas em dinheiro + suprimentos − sangrias.
+- `fechar_caixa()` passou a exigir o valor contado.
+
+### Corrigido
+
+- O fechamento somava vendas em PIX e cartão ao dinheiro da gaveta.
+
+---
+
 ## [1.3.0] - 2026-09-25
 
 ### Adicionado
