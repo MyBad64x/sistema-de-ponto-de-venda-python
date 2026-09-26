@@ -80,12 +80,39 @@ def mostrar_movimentacoes(movimentacoes):
     print("=" * largura)
 
 
+def _linha_valor(rotulo, valor, observacao=""):
+    print(f"  {rotulo:<22}{dinheiro(valor):>15}  {observacao}".rstrip())
+
+
 def mostrar_resumo_caixa(resumo, titulo):
     print("\n" + "=" * 50)
     print(titulo)
     print("=" * 50)
-    print(f"Caixa         : #{resumo.id_caixa} (aberto em {resumo.data_abertura})")
-    print(f"Valor inicial : {dinheiro(resumo.valor_inicial)}")
-    print(f"Vendas        : {resumo.quantidade_vendas} ({dinheiro(resumo.total_vendas)})")
-    print(f"Saldo         : {dinheiro(resumo.saldo)}")
+    print(f"Caixa #{resumo.id_caixa} - aberto em {resumo.data_abertura}")
+
+    print(f"\nVENDAS ({resumo.quantidade_vendas})")
+    if not resumo.vendas_por_forma:
+        print("  Nenhuma venda.")
+    for forma, total in resumo.vendas_por_forma.items():
+        _linha_valor(forma, total)
+    _linha_valor("Total", resumo.total_vendas)
+
+    print("\nDINHEIRO NA GAVETA")
+    _linha_valor("Valor inicial", resumo.valor_inicial)
+    _linha_valor("+ Vendas em dinheiro", resumo.vendas_dinheiro)
+    _linha_valor("+ Suprimentos", resumo.suprimentos)
+    _linha_valor("- Sangrias", resumo.sangrias)
+    _linha_valor("= Esperado", resumo.dinheiro_esperado)
+
+    if resumo.valor_contado is not None:
+        if resumo.diferenca > 0:
+            situacao = "SOBRA"
+        elif resumo.diferenca < 0:
+            situacao = "FALTA"
+        else:
+            situacao = "OK"
+
+        _linha_valor("Contado", resumo.valor_contado)
+        _linha_valor("Diferença", resumo.diferenca, situacao)
+
     print("=" * 50)

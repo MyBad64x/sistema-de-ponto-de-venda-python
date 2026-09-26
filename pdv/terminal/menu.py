@@ -7,7 +7,13 @@ se preocupar com o que ela faz.
 """
 
 from pdv import NOME_SISTEMA, VERSAO
-from pdv.caixa import abrir_caixa, fechar_caixa, resumo_caixa_aberto
+from pdv.caixa import (
+    abrir_caixa,
+    fechar_caixa,
+    registrar_sangria,
+    registrar_suprimento,
+    resumo_caixa_aberto,
+)
 from pdv.carrinho import Carrinho
 from pdv.erros import ErroPDV, EstoqueInsuficiente
 from pdv.estoque import ajustar_estoque, entrada_estoque
@@ -129,8 +135,8 @@ def menu_caixa():
         ("1", "Abrir caixa", abrir),
         ("2", "Fechar caixa", fechar),
         ("3", "Status do caixa", status),
-        ("4", "Sangria", em_desenvolvimento),
-        ("5", "Suprimento", em_desenvolvimento),
+        ("4", "Sangria", sangria),
+        ("5", "Suprimento", suprimento),
         ("6", "Histórico de caixas", em_desenvolvimento),
     ])
 
@@ -303,16 +309,44 @@ def fechar():
     if not carrinho.esta_vazio():
         raise ErroPDV("Há itens no carrinho. Finalize a venda ou limpe o carrinho antes.")
 
+    resumo_caixa_aberto()  # dá erro aqui mesmo se não houver caixa aberto
+
     if not confirmar("\nFechar o caixa?"):
         return
 
-    resumo = fechar_caixa()
+    # conferência "às cegas": o operador conta antes de ver quanto era esperado
+    print("\nConte todo o dinheiro da gaveta (cédulas e moedas).")
+    valor_contado = ler_decimal("Valor contado: R$ ", minimo=0)
+
+    resumo = fechar_caixa(valor_contado)
     mostrar_resumo_caixa(resumo, "FECHAMENTO DE CAIXA")
     print("Caixa fechado com sucesso!")
 
 
 def status():
     mostrar_resumo_caixa(resumo_caixa_aberto(), "STATUS DO CAIXA")
+
+
+def _movimentar_gaveta(titulo, registrar):
+    """Pede valor e motivo e chama registrar_sangria ou registrar_suprimento."""
+    resumo = resumo_caixa_aberto()
+
+    print(f"\n{titulo}")
+    print(f"Dinheiro na gaveta agora: {dinheiro(resumo.dinheiro_esperado)}")
+
+    valor = ler_decimal("Valor: R$ ", minimo=0.01)
+    motivo = ler_texto("Motivo: ")
+
+    resumo = registrar(valor, motivo)
+    print(f"\nRegistrado. Dinheiro na gaveta: {dinheiro(resumo.dinheiro_esperado)}")
+
+
+def sangria():
+    _movimentar_gaveta("SANGRIA (retirada de dinheiro)", registrar_sangria)
+
+
+def suprimento():
+    _movimentar_gaveta("SUPRIMENTO (entrada de dinheiro)", registrar_suprimento)
 
 
 def em_desenvolvimento():
