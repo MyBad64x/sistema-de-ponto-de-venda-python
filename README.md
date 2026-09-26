@@ -20,7 +20,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Aviso de estoque insuficiente, com opção de vender mesmo assim
 
 **Caixa**
-- - Abertura, sangria, suprimento, status e fechamento com conferência do dinheiro
+- Abertura, sangria, suprimento, status e fechamento com conferência do dinheiro
 
 **Geral**
 - Banco de dados SQLite criado automaticamente

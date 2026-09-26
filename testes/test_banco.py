@@ -14,7 +14,7 @@ def test_cria_todas_as_tabelas():
             "SELECT name FROM sqlite_master WHERE type = 'table'"
         )}
 
-        assert {
+    assert {
         "produtos", "movimentacoes_estoque", "vendas", "itens_vendas",
         "caixa", "movimentacoes_caixa",
     } <= tabelas
