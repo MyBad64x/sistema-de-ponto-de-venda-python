@@ -14,11 +14,37 @@ def test_cria_todas_as_tabelas():
             "SELECT name FROM sqlite_master WHERE type = 'table'"
         )}
 
-    assert {"produtos", "movimentacoes_estoque", "vendas", "itens_vendas", "caixa"} <= tabelas
+        assert {
+        "produtos", "movimentacoes_estoque", "vendas", "itens_vendas",
+        "caixa", "movimentacoes_caixa",
+    } <= tabelas
 
 
 def test_vendas_tem_coluna_caixa_id():
     assert "caixa_id" in _colunas("vendas")
+
+
+def test_migra_caixa_antigo_sem_valor_contado(tmp_path, monkeypatch):
+    """Bancos criados até a v1.3.0 não tinham caixa.valor_contado."""
+    caminho = tmp_path / "antigo.db"
+    conn = sqlite3.connect(caminho)
+    conn.execute("""
+        CREATE TABLE caixa(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            valor_inicial REAL NOT NULL,
+            data_fechamento TIMESTAMP,
+            valor_final REAL,
+            status TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setenv("PDV_BANCO", str(caminho))
+    criar_tabelas()
+
+    assert "valor_contado" in _colunas("caixa")
 
 
 def test_criar_tabelas_pode_rodar_varias_vezes():
