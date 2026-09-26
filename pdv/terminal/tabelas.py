@@ -116,3 +116,35 @@ def mostrar_resumo_caixa(resumo, titulo):
         _linha_valor("Diferença", resumo.diferenca, situacao)
 
     print("=" * 50)
+
+
+def _dinheiro_ou_troco(valor):
+    return "-" if valor is None else dinheiro(valor)
+
+
+def mostrar_historico_caixas(caixas):
+    if not caixas:
+        print("\nNenhum caixa registrado.")
+        return
+
+    largura = 104
+    print("\n" + "=" * largura)
+    print(
+        f"{'ID':<5}| {'ABERTURA':<17}| {'FECHAMENTO':<17}| {'VENDAS':<7}"
+        f"| {'TOTAL VENDAS':<14}| {'ESPERADO':<14}| {'CONTADO':<14}| DIFERENÇA"
+    )
+    print("=" * largura)
+
+    for caixa in caixas:
+        print(
+            f"{caixa['id']:<5}"
+            f"| {caixa['abertura']:<17}"
+            f"| {caixa['fechamento'] or 'ABERTO':<17}"
+            f"| {caixa['quantidade_vendas']:<7}"
+            f"| {dinheiro(caixa['total_vendas']):<14}"
+            f"| {_dinheiro_ou_troco(caixa['esperado']):<14}"
+            f"| {_dinheiro_ou_troco(caixa['contado']):<14}"
+            f"| {_dinheiro_ou_troco(caixa['diferenca'])}"
+        )
+
+    print("=" * largura)
