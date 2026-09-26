@@ -1,4 +1,5 @@
 from datetime import date
+
 import pytest
 
 from pdv.terminal import utilitarios

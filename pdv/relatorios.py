@@ -49,7 +49,7 @@ def periodo_mes_atual(hoje=None):
 @dataclass
 class ResumoVendas:
     periodo: Periodo
-    por_forma: list # linhas como forma_pagamento, quantidade e total
+    por_forma: list  # linhas como forma_pagamento, quantidade e total
 
     @property
     def quantidade_vendas(self):
@@ -65,7 +65,7 @@ class ResumoVendas:
         if self.quantidade_vendas == 0:
             return 0
         return round(self.total / self.quantidade_vendas, 2)
-    
+
 
 def resumo_vendas(periodo):
     with conexao() as conn:
