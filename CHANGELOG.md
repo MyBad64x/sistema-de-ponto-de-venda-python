@@ -11,6 +11,19 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.5.0] - 2026-09-26
+
+### Adicionado
+
+- Histórico de caixas: lista os últimos 20 caixas com abertura, fechamento, vendas, valor esperado, contado e diferença.
+- Resumo completo de qualquer caixa do histórico, aberto ou fechado.
+
+### Removido
+
+- Função `em_desenvolvimento` do menu (todas as opções do caixa estão implementadas).
+
+---
+
 ## [1.4.0] - 2026-09-25
 
 ### Adicionado
