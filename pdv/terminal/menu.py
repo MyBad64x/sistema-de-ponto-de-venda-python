@@ -9,7 +9,9 @@ se preocupar com o que ela faz.
 from pdv import NOME_SISTEMA, VERSAO
 from pdv.caixa import (
     abrir_caixa,
+    detalhar_caixa,
     fechar_caixa,
+    listar_caixas,
     registrar_sangria,
     registrar_suprimento,
     resumo_caixa_aberto,
@@ -28,6 +30,7 @@ from pdv.produtos import (
 )
 from pdv.terminal.tabelas import (
     mostrar_carrinho,
+    mostrar_historico_caixas,
     mostrar_movimentacoes,
     mostrar_produtos,
     mostrar_resumo_caixa,
@@ -50,6 +53,8 @@ from pdv.vendas import FORMAS_PAGAMENTO, finalizar_venda
 carrinho = Carrinho()
 
 MOVIMENTACOES_NA_TELA = 50
+
+CAIXAS_NA_TELA = 20
 
 
 def executar_menu(titulo, opcoes, texto_sair="Voltar", pausar_apos_acao=True):
@@ -137,7 +142,7 @@ def menu_caixa():
         ("3", "Status do caixa", status),
         ("4", "Sangria", sangria),
         ("5", "Suprimento", suprimento),
-        ("6", "Histórico de caixas", em_desenvolvimento),
+        ("6", "Histórico de caixas", historico),
     ])
 
 
@@ -349,5 +354,15 @@ def suprimento():
     _movimentar_gaveta("SUPRIMENTO (entrada de dinheiro)", registrar_suprimento)
 
 
-def em_desenvolvimento():
-    print("\nEm desenvolvimento.")
+def historico():
+    print(f"\nÚltimos {CAIXAS_NA_TELA} caixas:")
+    caixas = listar_caixas(limite=CAIXAS_NA_TELA)
+    mostrar_historico_caixas(caixas)
+
+    if not caixas:
+        return
+
+    id_caixa = ler_inteiro("\nID do caixa para ver o resumo (ENTER para voltar): ", minimo=0, padrao=0)
+
+    if id_caixa != 0:
+        mostrar_resumo_caixa(detalhar_caixa(id_caixa), f"RESUMO DO CAIXA #{id_caixa}")

@@ -3,7 +3,9 @@ import pytest
 from pdv.caixa import (
     abrir_caixa,
     caixa_aberto,
+    detalhar_caixa,
     fechar_caixa,
+    listar_caixas,
     registrar_sangria,
     registrar_suprimento,
     resumo_caixa_aberto,
@@ -150,3 +152,75 @@ def test_valor_contado_negativo(caixa):
     with pytest.raises(ErroPDV):
         fechar_caixa(-1)
     assert caixa_aberto() is not None
+
+
+# ---------------------------------------------------------------- histórico
+
+def test_historico_vazio():
+    assert listar_caixas() == []
+
+
+def test_historico_do_mais_recente_para_o_mais_antigo(carrinho, coca):
+    abrir_caixa(100)
+    carrinho.adicionar(coca, 2)
+    finalizar_venda(carrinho, "Dinheiro")  # 25,00
+    fechar_caixa(123)  # esperado 125 -> falta 2
+
+    abrir_caixa(50)  # sem vendas, continua aberto
+
+    recente, antigo = listar_caixas()
+
+    assert recente["status"] == "ABERTO"
+    assert recente["quantidade_vendas"] == 0  # LEFT JOIN: caixa sem vendas aparece
+    assert recente["total_vendas"] == 0
+    assert recente["fechamento"] is None
+    assert recente["contado"] is None
+    assert recente["diferenca"] is None
+
+    assert antigo["status"] == "FECHADO"
+    assert antigo["quantidade_vendas"] == 1
+    assert antigo["total_vendas"] == 25
+    assert antigo["esperado"] == 125
+    assert antigo["contado"] == 123
+    assert antigo["diferenca"] == -2
+
+
+def test_historico_formata_datas_no_padrao_brasileiro(caixa):
+    fechar_caixa(100)
+    (linha,) = listar_caixas()
+
+    # ex.: 26/09/2026 09:57
+    assert len(linha["abertura"]) == 16
+    assert linha["abertura"][2] == "/" and linha["abertura"][5] == "/"
+
+
+def test_historico_com_limite():
+    for valor in (10, 20, 30):
+        abrir_caixa(valor)
+        fechar_caixa(valor)
+
+    assert [linha["esperado"] for linha in listar_caixas(limite=2)] == [30, 20]
+
+
+def test_detalhar_caixa_fechado_bate_com_o_fechamento(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 1)
+    finalizar_venda(carrinho, "PIX")
+    registrar_sangria(40, "Banco")
+    fechamento = fechar_caixa(58)
+
+    detalhe = detalhar_caixa(caixa)
+
+    assert detalhe == fechamento
+    assert detalhe.dinheiro_esperado == 60
+    assert detalhe.diferenca == -2
+
+
+def test_detalhar_caixa_aberto(caixa):
+    detalhe = detalhar_caixa(caixa)
+    assert detalhe.valor_contado is None
+    assert detalhe.diferenca is None
+
+
+def test_detalhar_caixa_inexistente():
+    with pytest.raises(ErroPDV, match="não encontrado"):
+        detalhar_caixa(999)
