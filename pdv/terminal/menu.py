@@ -8,6 +8,7 @@ se preocupar com o que ela faz.
 
 from pdv import NOME_SISTEMA, VERSAO
 from pdv.caixa import (
+    DINHEIRO,
     abrir_caixa,
     detalhar_caixa,
     fechar_caixa,
@@ -266,24 +267,50 @@ def finalizar():
     print("\nForma de pagamento:")
     forma_pagamento = escolher("Escolha: ", FORMAS_PAGAMENTO)
 
+    valor_recebido = None
+    if forma_pagamento == DINHEIRO:
+        valor_recebido = _pedir_valor_recebido(carrinho.total())
+
     try:
-        resultado = finalizar_venda(carrinho, forma_pagamento)
+        resultado = finalizar_venda(carrinho, forma_pagamento, valor_recebido=valor_recebido)
     except EstoqueInsuficiente as erro:
         print(f"\n{erro}")
         if not confirmar("Vender mesmo assim, deixando o estoque negativo?"):
             print("\nVenda não finalizada. O carrinho foi mantido.")
             return
-        resultado = finalizar_venda(carrinho, forma_pagamento, permitir_estoque_negativo=True)
+        resultado = finalizar_venda(
+            carrinho,
+            forma_pagamento,
+            permitir_estoque_negativo=True,
+            valor_recebido=valor_recebido,
+        )
 
     print(f"\nVENDA #{resultado.id_venda} FINALIZADA")
     print(f"Total: {dinheiro(resultado.total)}")
     print(f"Pagamento: {resultado.forma_pagamento}")
+
+    if resultado.troco is not None:
+        print(f"Recebido: {dinheiro(resultado.valor_recebido)}")
+        print(f"\n>>> TROCO: {dinheiro(resultado.troco)} <<<")
 
     if resultado.estoques_negativos:
         print("\n=== ALERTA DE ESTOQUE ===")
         for nome, estoque in resultado.estoques_negativos:
             print(f"{nome} ficou com o estoque {estoque}")
         print("\nRegistre uma entrada ou ajuste de estoque.")
+
+
+def _pedir_valor_recebido(total):
+    """Pergunta quanto o cliente entregou, repetindo enquanto for menor que o total."""
+    print(f"\nTotal a pagar: {dinheiro(total)}")
+
+    while True:
+        valor = ler_decimal("Valor recebido (ENTER = valor exato): R$ ", minimo=0, padrao=total)
+
+        if valor >= total:
+            return valor
+
+        print(f"\nValor menor que o total. Faltam {dinheiro(total - valor)}.")
 
 
 def limpar():
