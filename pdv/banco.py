@@ -98,6 +98,8 @@ def criar_tabelas():
                 caixa_id INTEGER,
                 valor_total REAL,
                 forma_pagamento TEXT,
+                valor_recebido REAL,
+                troco REAL,
                 data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -128,6 +130,12 @@ def _atualizar_banco_antigo(conn):
         conn.execute("ALTER TABLE vendas ADD COLUMN caixa_id INTEGER")
 
     colunas_caixa = {coluna["name"] for coluna in conn.execute("PRAGMA table_info(caixa)")}
+
+    # v1.7.0: pagamento em dinheiro guarda o valor recebido e o troco
+    if "valor_recebido" not in colunas_vendas:
+        conn.execute("ALTER TABLE vendas ADD COLUMN valor_recebido REAL")
+    if "troco" not in colunas_vendas:
+        conn.execute("ALTER TABLE vendas ADD COLUMN troco REAL")
 
     # v1.4.0: fechamento guarda quanto dinheiro foi contado na gaveta
     if "valor_contado" not in colunas_caixa:

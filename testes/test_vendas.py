@@ -3,7 +3,7 @@ import pytest
 from pdv.banco import conexao
 from pdv.erros import ErroPDV, EstoqueInsuficiente
 from pdv.movimentacoes import listar_movimentacoes
-from pdv.produtos import buscar_produto, desativar_produto
+from pdv.produtos import buscar_produto, cadastrar_produto, desativar_produto
 from pdv.vendas import finalizar_venda
 
 
@@ -148,3 +148,71 @@ def test_caixa_fechado_no_meio_da_venda(caixa, carrinho, coca):
 
     with pytest.raises(ErroPDV, match="Abra o caixa"):
         finalizar_venda(carrinho, "PIX")
+
+
+# ---------------------------------------------------------------- troco
+
+def _venda_gravada():
+    with conexao() as conn:
+        return conn.execute("SELECT * FROM vendas ORDER BY id DESC").fetchone()
+
+
+def test_troco_no_pagamento_em_dinheiro(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 2)  # 25,00
+
+    resultado = finalizar_venda(carrinho, "Dinheiro", valor_recebido=50)
+
+    assert resultado.valor_recebido == 50
+    assert resultado.troco == 25
+
+    venda = _venda_gravada()
+    assert (venda["valor_total"], venda["valor_recebido"], venda["troco"]) == (25, 50, 25)
+
+
+def test_troco_com_centavos(caixa, carrinho):
+    salgado = cadastrar_produto("Salgado", 12.70, 10)
+    carrinho.adicionar(salgado, 1)
+
+    resultado = finalizar_venda(carrinho, "Dinheiro", valor_recebido=20)
+
+    # sem o round, 20 - 12.7 daria 7.300000000000001
+    assert resultado.troco == 7.3
+
+
+def test_dinheiro_sem_valor_recebido_considera_valor_exato(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 1)
+
+    resultado = finalizar_venda(carrinho, "Dinheiro")
+
+    assert resultado.valor_recebido == 12.5
+    assert resultado.troco == 0
+
+
+def test_valor_recebido_menor_que_o_total(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 2)  # 25,00
+
+    with pytest.raises(ErroPDV, match="menor que o total"):
+        finalizar_venda(carrinho, "Dinheiro", valor_recebido=20)
+
+    # nada foi gravado e o carrinho continua lá
+    assert _contar("vendas") == 0
+    assert buscar_produto(coca)["estoque"] == 5
+    assert carrinho.itens == {coca: 2}
+
+
+def test_pix_nao_tem_troco(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 1)
+
+    resultado = finalizar_venda(carrinho, "PIX")
+
+    assert (resultado.valor_recebido, resultado.troco) == (None, None)
+    venda = _venda_gravada()
+    assert (venda["valor_recebido"], venda["troco"]) == (None, None)
+
+
+def test_valor_recebido_so_vale_para_dinheiro(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 1)
+
+    with pytest.raises(ErroPDV, match="só vale para pagamento em dinheiro"):
+        finalizar_venda(carrinho, "Cartão de crédito", valor_recebido=50)
+    assert _contar("vendas") == 0
