@@ -217,3 +217,23 @@ def mostrar_vendas_por_dia(dias, largura_barra=30):
         )
 
     print("=" * 75)
+
+
+def mostrar_backups(backups):
+    if not backups:
+        print("\nNenhum backup encontrado.")
+        return
+
+    print("\n" + "=" * 70)
+    print(f"{'#':<4}| {'DATA':<17}| {'TAMANHO':<11}| ARQUIVO")
+    print("=" * 70)
+
+    for numero, backup in enumerate(backups, start=1):
+        print(
+            f"{numero:<4}"
+            f"| {backup.criado_em:%d/%m/%Y %H:%M} "
+            f"| {backup.tamanho_kb:>7} KB "
+            f"| {backup.caminho.name}"
+        )
+
+    print("=" * 70)

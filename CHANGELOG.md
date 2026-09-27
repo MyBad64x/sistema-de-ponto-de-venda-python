@@ -11,6 +11,20 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.8.0] - 2026-09-27
+
+### Adicionado
+
+- Backup do banco de dados pelo menu (Backup > Fazer backup agora) e automático ao fechar o caixa.
+- Lista de backups com data e tamanho; são mantidos os 30 mais recentes.
+- Restauração de backup, com validação do arquivo e backup de segurança do estado atual antes.
+
+### Alterado
+
+- A pasta `database/backups/` é ignorada pelo Git.
+
+---
+
 ## [1.7.0] - 2026-09-26
 
 ### Adicionado

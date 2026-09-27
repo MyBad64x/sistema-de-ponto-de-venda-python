@@ -7,6 +7,7 @@ se preocupar com o que ela faz.
 """
 
 from pdv import NOME_SISTEMA, VERSAO
+from pdv.backup import fazer_backup, listar_backups, restaurar_backup
 from pdv.caixa import (
     DINHEIRO,
     abrir_caixa,
@@ -39,6 +40,7 @@ from pdv.relatorios import (
     vendas_por_dia,
 )
 from pdv.terminal.tabelas import (
+    mostrar_backups,
     mostrar_carrinho,
     mostrar_historico_caixas,
     mostrar_movimentacoes,
@@ -117,6 +119,7 @@ def menu_principal():
             ("3", "Estoque", menu_estoque),
             ("4", "Caixa", menu_caixa),
             ("5", "Relatórios", menu_relatorios),
+            ("6", "Backup", menu_backup),
         ],
         texto_sair="Sair",
         # as opções do menu principal abrem submenus; ao voltar deles não precisa pausar
@@ -169,6 +172,14 @@ def menu_relatorios():
         ("1", "Resumo de vendas", relatorio_resumo),
         ("2", "Produtos mais vendidos", relatorio_produtos),
         ("3", "Vendas por dia", relatorio_por_dia),
+    ])
+
+
+def menu_backup():
+    executar_menu("BACKUP", [
+        ("1", "Fazer backup agora", backup_agora),
+        ("2", "Ver backups", ver_backups),
+        ("3", "Restaurar backup", restaurar),
     ])
 
 
@@ -379,6 +390,14 @@ def fechar():
     mostrar_resumo_caixa(resumo, "FECHAMENTO DE CAIXA")
     print("Caixa fechado com sucesso!")
 
+    # o caixa já está fechado; se o backup falhar, só avisa
+    try:
+        caminho = fazer_backup()
+        print(f"Backup automático criado: {caminho.name}")
+    except ErroPDV as erro:
+        print(f"\nATENÇÃO: {erro}")
+        print("Faça um backup manual em Backup > Fazer backup agora.")
+
 
 def status():
     mostrar_resumo_caixa(resumo_caixa_aberto(), "STATUS DO CAIXA")
@@ -461,3 +480,48 @@ def relatorio_por_dia():
     periodo = _escolher_periodo()
     _titulo_periodo("VENDAS POR DIA", periodo)
     mostrar_vendas_por_dia(vendas_por_dia(periodo))
+
+
+# ---------------------------------------------------------------- backup
+
+def backup_agora():
+    caminho = fazer_backup()
+    print(f"\nBackup criado: {caminho.name}")
+    print(f"Pasta: {caminho.parent}")
+
+
+def ver_backups():
+    mostrar_backups(listar_backups())
+
+
+def restaurar():
+    if not carrinho.esta_vazio():
+        raise ErroPDV("Há itens no carrinho. Finalize a venda ou limpe o carrinho antes.")
+
+    backups = listar_backups()
+    mostrar_backups(backups)
+
+    if not backups:
+        return
+
+    numero = ler_inteiro(
+        "\nNúmero do backup para restaurar (ENTER para voltar): ",
+        minimo=0,
+        maximo=len(backups),
+        padrao=0,
+    )
+    if numero == 0:
+        return
+
+    escolhido = backups[numero - 1]
+
+    print(f"\nATENÇÃO: os dados atuais serão substituídos pelos do backup de "
+          f"{escolhido.criado_em:%d/%m/%Y %H:%M}.")
+    print("Antes disso, será feito um backup do estado atual.")
+
+    if not confirmar("Restaurar?"):
+        return
+
+    seguranca = restaurar_backup(escolhido.caminho)
+    print("\nBackup restaurado.")
+    print(f"O estado anterior foi salvo em {seguranca.name}.")

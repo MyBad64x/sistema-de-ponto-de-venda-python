@@ -29,6 +29,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Banco de dados SQLite criado automaticamente
 - Interface em terminal com menus
 - Testes automáticos
+- Backup automático ao fechar o caixa, backup manual e restauração
 
 ## Tecnologias utilizadas
 
@@ -54,6 +55,7 @@ sistema-de-ponto-de-venda-python/
 │   ├── carrinho.py          # carrinho da venda em andamento
 │   ├── vendas.py            # finalização de vendas
 │   ├── relatorios.py        # relatórios de vendas por período
+│   ├── backup.py            # backup e restauração do banco
 │   │
 │   └── terminal/            # interface de terminal
 │       ├── menu.py          # menus e ações
@@ -89,6 +91,12 @@ python main.py
 
 O banco é criado em `database/loja.db` na primeira execução. Bancos criados por versões anteriores são atualizados automaticamente.
 
+## Backups
+
+Os backups ficam em `database/backups/`, um arquivo por backup, com a data e a hora no nome. O sistema faz um backup automático a cada fechamento de caixa e mantém os 30 mais recentes.
+
+Os backups ficam no mesmo computador que o banco, então não protegem contra perda ou defeito do disco. De vez em quando, copie a pasta `database/backups/` para um pendrive ou para a nuvem.
+
 ## Como rodar os testes
 
 ```bash
@@ -112,7 +120,6 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 ## Próximas funcionalidades
 
 - Login de usuários
-- Backup do banco de dados
 - Impressão de comprovantes
 - Interface gráfica
 

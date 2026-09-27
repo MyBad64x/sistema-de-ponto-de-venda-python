@@ -26,3 +26,6 @@ env/
 Thumbs.db
 # Testes
 .pytest_cache/
+
+# Backups do banco (têm os dados da loja)
+database/backups/
