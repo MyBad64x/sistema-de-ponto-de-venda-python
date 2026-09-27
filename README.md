@@ -1,5 +1,7 @@
 # PDV Python
 
+[![Testes](https://github.com/MyBad64x/sistema-de-ponto-de-venda-python/actions/workflows/testes.yml/badge.svg)](https://github.com/MyBad64x/sistema-de-ponto-de-venda-python/actions/workflows/testes.yml)
+
 Sistema de Ponto de Venda (PDV) desenvolvido em Python com SQLite.
 
 Este é meu primeiro projeto completo de software, criado com o objetivo de colocar em prática conceitos de programação, banco de dados e organização de código. O projeto também está sendo utilizado como base para um sistema destinado a um pequeno comércio, por isso continua em desenvolvimento e recebe melhorias constantes.
@@ -33,15 +35,17 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 ## Tecnologias utilizadas
 
-- Python 3.9+
+- Python 3.10+
 - SQLite / SQL
 - pytest (testes automáticos)
 - Git
+- GitHub Actions (testes automáticos a cada pull request)
 
 ## Estrutura do projeto
 
 ```
 sistema-de-ponto-de-venda-python/
+├── .github/workflows/       # testes automáticos no GitHub (CI)
 │
 ├── main.py                  # ponto de entrada: cria o banco e abre o menu
 │
@@ -105,6 +109,8 @@ python -m pytest
 ```
 
 Os testes usam um banco temporário e não mexem no `database/loja.db`.
+
+Os testes também rodam automaticamente no GitHub a cada pull request e a cada merge na `main`, no Linux e no Windows, com Python 3.10 e 3.14.
 
 ## Objetivos do projeto
 
