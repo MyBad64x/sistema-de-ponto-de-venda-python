@@ -23,9 +23,39 @@ class ResultadoVenda:
     forma_pagamento: str
     # [(nome do produto, estoque que ficou)] para produtos que ficaram negativos
     estoques_negativos: list = field(default_factory=list)
+    # só no pagamento em dinheiro; nos outros ficam None
+    valor_recebido: float = None
+    troco: float = None
 
 
-def finalizar_venda(carrinho, forma_pagamento, permitir_estoque_negativo=False):
+def _calcular_troco(forma_pagamento, total, valor_recebido):
+    """Devolve (valor_recebido, troco) para gravar na venda.
+
+    Só o pagamento em dinheiro tem troco; nos outros, os dois ficam None (NULL no banco).
+    Em dinheiro sem valor informado, considera que o cliente pagou o valor exato.
+    """
+    if forma_pagamento != DINHEIRO:
+        if valor_recebido is not None:
+            raise ErroPDV("Valor recebido só vale para pagamento em dinheiro.")
+        return None, None
+
+    if valor_recebido is None:
+        valor_recebido = total
+
+    valor_recebido = round(valor_recebido, 2)
+
+    if valor_recebido < total:
+        raise ErroPDV("O valor recebido é menor que o total da venda.")
+
+    return valor_recebido, round(valor_recebido - total, 2)
+
+
+def finalizar_venda(
+    carrinho,
+    forma_pagamento,
+    permitir_estoque_negativo=False,
+    valor_recebido=None,
+):
     """Grava a venda, os itens, baixa o estoque e registra as movimentações.
 
     Tudo acontece numa única transação: se qualquer passo falhar, nada é gravado.
@@ -63,12 +93,13 @@ def finalizar_venda(carrinho, forma_pagamento, permitir_estoque_negativo=False):
             total += produto["preco"] * quantidade
 
         total = round(total, 2)
+        valor_recebido, troco = _calcular_troco(forma_pagamento, total, valor_recebido)
 
         # 2) grava a venda
-        cursor = conn.execute(
-            "INSERT INTO vendas(caixa_id, valor_total, forma_pagamento) VALUES (?, ?, ?)",
-            (caixa["id"], total, forma_pagamento),
-        )
+        cursor = conn.execute("""
+            INSERT INTO vendas(caixa_id, valor_total, forma_pagamento, valor_recebido, troco)
+            VALUES (?, ?, ?, ?, ?)
+        """, (caixa["id"], total, forma_pagamento, valor_recebido, troco))
         id_venda = cursor.lastrowid
 
         estoques_negativos = []
@@ -96,4 +127,6 @@ def finalizar_venda(carrinho, forma_pagamento, permitir_estoque_negativo=False):
     # só limpa o carrinho depois que o banco confirmou a venda
     carrinho.limpar()
 
-    return ResultadoVenda(id_venda, total, forma_pagamento, estoques_negativos)
+    return ResultadoVenda(
+        id_venda, total, forma_pagamento, estoques_negativos, valor_recebido, troco
+    )

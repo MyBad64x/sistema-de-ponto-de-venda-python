@@ -24,6 +24,33 @@ def test_vendas_tem_coluna_caixa_id():
     assert "caixa_id" in _colunas("vendas")
 
 
+def test_migra_vendas_sem_troco(tmp_path, monkeypatch):
+    """Bancos criados até a v1.6.0 não tinham vendas.valor_recebido nem vendas.troco."""
+    caminho = tmp_path / "antigo.db"
+    conn = sqlite3.connect(caminho)
+    conn.execute("""
+        CREATE TABLE vendas(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            caixa_id INTEGER,
+            valor_total REAL,
+            forma_pagamento TEXT,
+            data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("INSERT INTO vendas(caixa_id, valor_total, forma_pagamento) VALUES (1, 10, 'PIX')")
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setenv("PDV_BANCO", str(caminho))
+    criar_tabelas()
+
+    assert {"valor_recebido", "troco"} <= _colunas("vendas")
+    with conexao() as conn:
+        # vendas antigas continuam lá, com as colunas novas vazias
+        venda = conn.execute("SELECT valor_total, valor_recebido, troco FROM vendas").fetchone()
+    assert tuple(venda) == (10, None, None)
+
+
 def test_migra_caixa_antigo_sem_valor_contado(tmp_path, monkeypatch):
     """Bancos criados até a v1.3.0 não tinham caixa.valor_contado."""
     caminho = tmp_path / "antigo.db"

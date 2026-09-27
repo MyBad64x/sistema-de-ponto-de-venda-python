@@ -16,7 +16,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 **Vendas**
 - Carrinho de compras (adicionar, remover, limpar)
-- Finalização de venda com escolha da forma de pagamento
+- Finalização de venda com escolha da forma de pagamento e troco no pagamento em dinheiro
 - Aviso de estoque insuficiente, com opção de vender mesmo assim
 
 **Caixa**
@@ -111,7 +111,6 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
-- Troco no pagamento em dinheiro
 - Login de usuários
 - Backup do banco de dados
 - Impressão de comprovantes

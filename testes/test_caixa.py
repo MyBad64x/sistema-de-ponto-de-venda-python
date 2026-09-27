@@ -224,3 +224,11 @@ def test_detalhar_caixa_aberto(caixa):
 def test_detalhar_caixa_inexistente():
     with pytest.raises(ErroPDV, match="não encontrado"):
         detalhar_caixa(999)
+
+
+def test_troco_nao_muda_o_dinheiro_esperado(caixa, carrinho, coca):
+    """Entram 50,00 na gaveta e saem 37,50 de troco: sobram os 12,50 da venda."""
+    carrinho.adicionar(coca, 1)
+    finalizar_venda(carrinho, "Dinheiro", valor_recebido=50)
+
+    assert resumo_caixa_aberto().dinheiro_esperado == 112.5
