@@ -11,6 +11,19 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.7.0] - 2026-09-26
+
+### Adicionado
+
+- Troco no pagamento em dinheiro: o operador informa o valor recebido (ENTER = valor exato) e o sistema mostra o troco.
+- A venda guarda o valor recebido e o troco.
+
+### Alterado
+
+- `finalizar_venda()` aceita `valor_recebido`, que só vale para pagamento em dinheiro.
+
+---
+
 ## [1.6.0] - 2026-09-26
 
 ### Adicionado
