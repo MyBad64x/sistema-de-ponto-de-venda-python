@@ -16,7 +16,7 @@ def test_cria_todas_as_tabelas():
 
     assert {
         "produtos", "movimentacoes_estoque", "vendas", "itens_vendas",
-        "caixa", "movimentacoes_caixa",
+        "caixa", "movimentacoes_caixa", "usuarios",
     } <= tabelas
 
 

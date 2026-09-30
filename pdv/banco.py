@@ -114,6 +114,18 @@ def criar_tabelas():
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                login TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                senha_hash TEXT NOT NULL,
+                perfil TEXT NOT NULL CHECK (perfil IN ('dono', 'operador')),
+                ativo INTEGER NOT NULL DEFAULT 1 CHECK (ativo IN (0, 1)),
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         _atualizar_banco_antigo(conn)
 
 
