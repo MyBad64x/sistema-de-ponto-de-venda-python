@@ -19,6 +19,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Carrinho de compras (adicionar, remover, limpar)
 - Finalização de venda com escolha da forma de pagamento e troco no pagamento em dinheiro
 - Aviso de estoque insuficiente, com opção de vender mesmo assim
+- Comprovante em texto ao finalizar a venda, salvo em arquivo e pronto para imprimir
 
 **Caixa**
 - Abertura, sangria, suprimento, status, fechamento com conferência do dinheiro e histórico de caixas
@@ -58,6 +59,7 @@ sistema-de-ponto-de-venda-python/
 │   ├── vendas.py            # finalização de vendas
 │   ├── relatorios.py        # relatórios de vendas por período
 │   ├── backup.py            # backup e restauração do banco
+│   ├── comprovante.py       # comprovante de venda em texto
 │   │
 │   └── terminal/            # interface de terminal
 │       ├── menu.py          # menus e ações

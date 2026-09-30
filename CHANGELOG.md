@@ -11,10 +11,11 @@ z= correção de bugs no projeto
 
 ---
 
-## [Não lançado]
+## [1.9.0] - 2026-09-30
 
 ### Adicionado
 
+- Comprovante de venda: ao finalizar a venda, o sistema mostra um cupom em texto (itens, total, pagamento e troco) e o salva em `database/comprovantes/`.
 - Testes automáticos no GitHub Actions a cada pull request e a cada merge na `main` (Linux e Windows, Python 3.10 e 3.14).
 
 ### Alterado
