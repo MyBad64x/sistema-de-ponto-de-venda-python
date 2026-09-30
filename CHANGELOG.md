@@ -11,6 +11,18 @@ z= correção de bugs no projeto
 
 ---
 
+## [Não lançado]
+
+### Adicionado
+
+- Testes automáticos no GitHub Actions a cada pull request e a cada merge na `main` (Linux e Windows, Python 3.10 e 3.14).
+
+### Alterado
+
+- Versão mínima do Python passou a ser a 3.10 (a 3.9 deixou de ter suporte em outubro de 2025).
+
+---
+
 ## [1.8.0] - 2026-09-27
 
 ### Adicionado
