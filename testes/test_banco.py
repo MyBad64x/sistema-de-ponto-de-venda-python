@@ -1,5 +1,7 @@
 import sqlite3
 
+import pytest
+
 from pdv.banco import CAMINHO_PADRAO, PASTA_PROJETO, caminho_banco, conexao, criar_tabelas
 
 
@@ -19,6 +21,36 @@ def test_cria_todas_as_tabelas():
         "caixa", "movimentacoes_caixa", "usuarios",
     } <= tabelas
 
+
+def test_usuarios_tem_colunas_esperadas():
+    assert {
+        "id", "nome", "login", "senha_hash",
+        "perfil", "ativo", "data_criacao",
+    } <= _colunas("usuarios")
+
+
+def test_usuarios_rejeita_perfil_invalido():
+    with pytest.raises(sqlite3.IntegrityError):
+        with conexao() as conn:
+            conn.execute("""
+                INSERT INTO usuarios(nome, login, senha_hash, perfil)
+                VALUES ('Teste', 'teste', 'hash-de-teste', 'gerente')
+            """)
+
+
+def test_login_nao_aceita_diferenca_apenas_de_maiusculas():
+    with conexao() as conn:
+        conn.execute("""
+            INSERT INTO usuarios(nome, login, senha_hash, perfil)
+            VALUES ('Teste', 'Alberto', 'hash-de-teste', 'dono')
+        """)
+
+    with pytest.raises(sqlite3.IntegrityError):
+        with conexao() as conn:
+            conn.execute("""
+                INSERT INTO usuarios(nome, login, senha_hash, perfil)
+                VALUES ('Outro', 'alberto', 'outro-hash', 'operador')
+            """)
 
 def test_vendas_tem_coluna_caixa_id():
     assert "caixa_id" in _colunas("vendas")
