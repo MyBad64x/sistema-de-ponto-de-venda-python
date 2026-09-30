@@ -19,6 +19,7 @@ from pdv.caixa import (
     resumo_caixa_aberto,
 )
 from pdv.carrinho import Carrinho
+from pdv.comprovante import gerar_comprovante, salvar_comprovante
 from pdv.erros import ErroPDV, EstoqueInsuficiente
 from pdv.estoque import ajustar_estoque, entrada_estoque
 from pdv.movimentacoes import listar_movimentacoes
@@ -304,11 +305,26 @@ def finalizar():
         print(f"Recebido: {dinheiro(resultado.valor_recebido)}")
         print(f"\n>>> TROCO: {dinheiro(resultado.troco)} <<<")
 
+    _mostrar_comprovante(resultado.id_venda)
+
     if resultado.estoques_negativos:
         print("\n=== ALERTA DE ESTOQUE ===")
         for nome, estoque in resultado.estoques_negativos:
             print(f"{nome} ficou com o estoque {estoque}")
         print("\nRegistre uma entrada ou ajuste de estoque.")
+
+
+def _mostrar_comprovante(id_venda):
+    """Mostra o cupom e o salva em arquivo. A venda já está gravada: se o arquivo
+    não puder ser salvo, só avisa, sem desfazer nada."""
+    print("\n" + gerar_comprovante(id_venda))
+
+    try:
+        caminho = salvar_comprovante(id_venda)
+    except OSError as erro:
+        print(f"Não foi possível salvar o comprovante: {erro}")
+    else:
+        print(f"Comprovante salvo em: {caminho}")
 
 
 def _pedir_valor_recebido(total):

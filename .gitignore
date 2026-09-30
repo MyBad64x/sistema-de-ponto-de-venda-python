@@ -29,3 +29,6 @@ Thumbs.db
 
 # Backups do banco (têm os dados da loja)
 database/backups/
+
+# Comprovantes de venda (têm os dados da loja)
+database/comprovantes/
