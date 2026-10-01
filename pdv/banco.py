@@ -54,7 +54,19 @@ def criar_tabelas():
                 nome TEXT NOT NULL,
                 preco REAL NOT NULL,
                 estoque INTEGER NOT NULL,
-                ativo INTEGER DEFAULT 1
+                ativo INTEGER DEFAULT 1,
+                codigo_barras TEXT,
+                custo_medio REAL
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS compras(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fornecedor TEXT,
+                referencia TEXT,
+                data_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                observacao TEXT
             )
         """)
 
@@ -65,7 +77,9 @@ def criar_tabelas():
                 tipo TEXT NOT NULL,
                 quantidade INTEGER NOT NULL,
                 observacao TEXT,
-                data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                compra_id INTEGER,
+                custo_unitario REAL
             )
         """)
 
@@ -110,7 +124,8 @@ def criar_tabelas():
                 venda_id INTEGER,
                 produto_id INTEGER,
                 quantidade INTEGER,
-                valor_unitario REAL
+                valor_unitario REAL,
+                custo_unitario REAL
             )
         """)
 
@@ -142,6 +157,31 @@ def _atualizar_banco_antigo(conn):
         conn.execute("ALTER TABLE vendas ADD COLUMN caixa_id INTEGER")
 
     colunas_caixa = {coluna["name"] for coluna in conn.execute("PRAGMA table_info(caixa)")}
+
+    colunas_produtos = {coluna["name"] for coluna in conn.execute("PRAGMA table_info(produtos)")}
+    if "codigo_barras" not in colunas_produtos:
+        conn.execute("ALTER TABLE produtos ADD COLUMN codigo_barras TEXT")
+    if "custo_medio" not in colunas_produtos:
+        conn.execute("ALTER TABLE produtos ADD COLUMN custo_medio REAL")
+
+    colunas_movimentacoes = {
+        coluna["name"] for coluna in conn.execute("PRAGMA table_info(movimentacoes_estoque)")
+    }
+    if "compra_id" not in colunas_movimentacoes:
+        conn.execute("ALTER TABLE movimentacoes_estoque ADD COLUMN compra_id INTEGER")
+    if "custo_unitario" not in colunas_movimentacoes:
+        conn.execute("ALTER TABLE movimentacoes_estoque ADD COLUMN custo_unitario REAL")
+
+    colunas_itens_vendas = {
+        coluna["name"] for coluna in conn.execute("PRAGMA table_info(itens_vendas)")
+    }
+    if "custo_unitario" not in colunas_itens_vendas:
+        conn.execute("ALTER TABLE itens_vendas ADD COLUMN custo_unitario REAL")
+
+    conn.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_produtos_codigo_barras
+        ON produtos(codigo_barras COLLATE NOCASE)
+    """)
 
     # v1.7.0: pagamento em dinheiro guarda o valor recebido e o troco
     if "valor_recebido" not in colunas_vendas:
