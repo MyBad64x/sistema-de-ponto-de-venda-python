@@ -11,6 +11,13 @@ z= correção de bugs no projeto
 
 ---
 
+## Em desenvolvimento
+
+### Preparação
+
+- Banco preparado para códigos de barras, registros pesquisáveis de compras, custo médio ponderado e custo dos produtos no momento da venda.
+- Produtos e vendas antigos permanecem sem custo registrado até que novas compras forneçam esses dados.
+
 ## [1.10.0] - 2026-10-01
 
 ### Adicionado
