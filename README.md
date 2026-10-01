@@ -133,6 +133,8 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
+- Leitura de códigos de barras para vendas, reposição e contagem de estoque.
+- Registro pesquisável de compras, custo médio ponderado e análise de rentabilidade para o perfil dono.
 - Impressão de comprovantes
 - Interface gráfica
 

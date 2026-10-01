@@ -32,3 +32,8 @@ database/backups/
 
 # Comprovantes de venda (têm os dados da loja)
 database/comprovantes/
+
+# Arquivos temporários do SQLite (WAL, SHM e journal)
+database/*.db-*
+database/*.sqlite-*
+database/*.sqlite3-*

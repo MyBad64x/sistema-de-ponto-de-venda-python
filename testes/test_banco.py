@@ -18,8 +18,30 @@ def test_cria_todas_as_tabelas():
 
     assert {
         "produtos", "movimentacoes_estoque", "vendas", "itens_vendas",
-        "caixa", "movimentacoes_caixa", "usuarios",
+        "caixa", "movimentacoes_caixa", "usuarios", "compras",
     } <= tabelas
+
+
+def test_tabelas_de_produto_compra_e_venda_tem_colunas_de_custo():
+    assert {"codigo_barras", "custo_medio"} <= _colunas("produtos")
+    assert {"fornecedor", "referencia", "data_compra", "observacao"} <= _colunas("compras")
+    assert {"compra_id", "custo_unitario"} <= _colunas("movimentacoes_estoque")
+    assert "custo_unitario" in _colunas("itens_vendas")
+
+
+def test_codigo_de_barras_nao_pode_ser_duplicado_ignorando_maiusculas():
+    with conexao() as conn:
+        conn.execute(
+            "INSERT INTO produtos(nome, preco, estoque, codigo_barras) VALUES (?, ?, ?, ?)",
+            ("Produto A", 10, 1, "abc123"),
+        )
+
+    with pytest.raises(sqlite3.IntegrityError):
+        with conexao() as conn:
+            conn.execute(
+                "INSERT INTO produtos(nome, preco, estoque, codigo_barras) VALUES (?, ?, ?, ?)",
+                ("Produto B", 10, 1, "ABC123"),
+            )
 
 
 def test_usuarios_tem_colunas_esperadas():
@@ -133,6 +155,68 @@ def test_migra_banco_antigo_sem_caixa_id(tmp_path, monkeypatch):
     assert "caixa_id" in _colunas("vendas")
     with conexao() as conn:
         assert conn.execute("SELECT COUNT(*) FROM vendas").fetchone()[0] == 1
+
+
+def test_migra_produtos_movimentacoes_e_vendas_sem_dados_de_custo(tmp_path, monkeypatch):
+    caminho = tmp_path / "antigo.db"
+    conn = sqlite3.connect(caminho)
+    conn.execute("""
+        CREATE TABLE produtos(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            preco REAL NOT NULL,
+            estoque INTEGER NOT NULL,
+            ativo INTEGER DEFAULT 1
+        )
+    """)
+    conn.execute("INSERT INTO produtos(nome, preco, estoque) VALUES ('Produto antigo', 15, 4)")
+    conn.execute("""
+        CREATE TABLE movimentacoes_estoque(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            produto_id INTEGER NOT NULL,
+            tipo TEXT NOT NULL,
+            quantidade INTEGER NOT NULL,
+            observacao TEXT,
+            data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("""
+        INSERT INTO movimentacoes_estoque(produto_id, tipo, quantidade, observacao)
+        VALUES (1, 'ENTRADA', 4, 'Estoque inicial')
+    """)
+    conn.execute("""
+        CREATE TABLE itens_vendas(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            venda_id INTEGER,
+            produto_id INTEGER,
+            quantidade INTEGER,
+            valor_unitario REAL
+        )
+    """)
+    conn.execute(
+        "INSERT INTO itens_vendas(venda_id, produto_id, quantidade, valor_unitario) "
+        "VALUES (1, 1, 1, 15)"
+    )
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setenv("PDV_BANCO", str(caminho))
+    criar_tabelas()
+
+    with conexao() as conn:
+        produto = conn.execute(
+            "SELECT nome, codigo_barras, custo_medio FROM produtos WHERE id = 1"
+        ).fetchone()
+        movimentacao = conn.execute(
+            "SELECT quantidade, compra_id, custo_unitario FROM movimentacoes_estoque"
+        ).fetchone()
+        item_venda = conn.execute(
+            "SELECT valor_unitario, custo_unitario FROM itens_vendas"
+        ).fetchone()
+
+    assert tuple(produto) == ("Produto antigo", None, None)
+    assert tuple(movimentacao) == (4, None, None)
+    assert tuple(item_venda) == (15, None)
 
 
 def test_caminho_padrao_fica_na_pasta_do_projeto(monkeypatch):
