@@ -6,7 +6,10 @@ cabeçalho, ler a opção, mostrar erros e pausar. Assim cada ação só precisa
 se preocupar com o que ela faz.
 """
 
+from getpass import getpass
+
 from pdv import NOME_SISTEMA, VERSAO
+from pdv.banco import conexao
 from pdv.backup import fazer_backup, listar_backups, restaurar_backup
 from pdv.caixa import (
     DINHEIRO,
@@ -65,15 +68,14 @@ from pdv.terminal.utilitarios import (
     pausar,
     ler_data,
 )
+from pdv.usuarios import autenticar, criar_usuario
 from pdv.vendas import FORMAS_PAGAMENTO, finalizar_venda
 
 # a venda em andamento (fica na memória até ser finalizada)
 carrinho = Carrinho()
 
 MOVIMENTACOES_NA_TELA = 50
-
 CAIXAS_NA_TELA = 20
-
 PRODUTOS_NO_RANKING = 10
 
 
@@ -109,25 +111,130 @@ def executar_menu(titulo, opcoes, texto_sair="Voltar", pausar_apos_acao=True):
             pausar()
 
 
+# ---------------------------------------------------------------- login
+
+def _usuario_existe():
+    with conexao() as conn:
+        total = conn.execute("SELECT COUNT(*) FROM usuarios WHERE ativo = 1").fetchone()[0]
+    return total > 0
+
+
+def _criar_primeiro_usuario():
+    print("\nCadastro do primeiro usuário dono")
+    nome = ler_texto("Nome: ")
+    login = ler_texto("Login: ")
+    senha = getpass("Senha (mínimo 8 caracteres): ")
+
+    try:
+        criar_usuario(nome, login, senha, "dono")
+    except ErroPDV as erro:
+        print(f"\n{erro}")
+        pausar()
+        return None
+
+    print("\nUsuário dono criado com sucesso.")
+    pausar()
+    return autenticar(login, senha)
+
+
+def menu_login():
+    if not _usuario_existe():
+        print("\nNenhum usuário cadastrado.")
+        print("Cadastre o primeiro usuário dono para continuar.")
+        usuario = _criar_primeiro_usuario()
+        if usuario is None:
+            return None
+        return usuario
+
+    while True:
+        limpar_tela()
+        cabecalho("LOGIN")
+        login = input("\nLogin: ").strip()
+        senha = getpass("Senha: ")
+
+        usuario = autenticar(login, senha)
+        if usuario is None:
+            print("\nLogin ou senha inválidos.")
+            if not confirmar("Tentar novamente?"):
+                return None
+            continue
+
+        print(f"\nBem-vindo(a), {usuario['nome']}!")
+        pausar()
+        return usuario
+
+
 # ---------------------------------------------------------------- menu principal
 
-def menu_principal():
-    executar_menu(
-        f"{NOME_SISTEMA} - v{VERSAO}",
-        [
+def _opcoes_menu(usuario):
+    if usuario["perfil"] == "dono":
+        return [
             ("1", "Produtos", menu_produtos),
             ("2", "Vendas", menu_vendas),
             ("3", "Estoque", menu_estoque),
             ("4", "Caixa", menu_caixa),
             ("5", "Relatórios", menu_relatorios),
             ("6", "Backup", menu_backup),
-        ],
+            ("7", "Usuários", menu_usuarios),
+        ]
+
+    return [
+        ("1", "Produtos", menu_produtos),
+        ("2", "Vendas", menu_vendas),
+        ("3", "Caixa", menu_caixa),
+    ]
+
+
+def menu_principal(usuario):
+    executar_menu(
+        f"{NOME_SISTEMA} - v{VERSAO} - {usuario['perfil'].title()}",
+        _opcoes_menu(usuario),
         texto_sair="Sair",
-        # as opções do menu principal abrem submenus; ao voltar deles não precisa pausar
         pausar_apos_acao=False,
     )
     print("\nEncerrando o sistema...")
 
+
+# ---------------------------------------------------------------- usuários
+
+def menu_usuarios():
+    executar_menu("USUÁRIOS", [
+        ("1", "Cadastrar usuário", cadastrar_usuario),
+        ("2", "Listar usuários", listar_usuarios),
+    ])
+
+
+def cadastrar_usuario():
+    nome = ler_texto("\nNome: ")
+    login = ler_texto("Login: ")
+    perfil = escolher("\nPerfil: ", ("dono", "operador"))
+    senha = getpass("Senha: ")
+
+    id_usuario = criar_usuario(nome, login, senha, perfil)
+    print(f"\nUsuário '{nome}' cadastrado com o ID {id_usuario}.")
+
+
+def listar_usuarios():
+    with conexao() as conn:
+        usuarios = conn.execute(
+            """
+            SELECT id, nome, login, perfil, ativo
+            FROM usuarios
+            ORDER BY nome
+            """
+        ).fetchall()
+
+    if not usuarios:
+        print("\nNenhum usuário cadastrado.")
+        return
+
+    print("\nUSUÁRIOS:")
+    for usuario in usuarios:
+        status = "Ativo" if usuario["ativo"] else "Inativo"
+        print(f"{usuario['id']} - {usuario['nome']} | {usuario['login']} | {usuario['perfil']} | {status}")
+
+
+# ---------------------------------------------------------------- produtos
 
 def menu_produtos():
     executar_menu("PRODUTOS", [
@@ -152,8 +259,8 @@ def menu_vendas():
 def menu_estoque():
     executar_menu("ESTOQUE", [
         ("1", "Entrada de estoque", entrada),
-        ("2", "Ajuste de estoque", ajuste),
-        ("3", "Movimentações", movimentacoes),
+        ("2", "Movimentações", movimentacoes),
+        ("3", "Ajuste de estoque", ajuste),
     ])
 
 
@@ -520,24 +627,7 @@ def restaurar():
     if not backups:
         return
 
-    numero = ler_inteiro(
-        "\nNúmero do backup para restaurar (ENTER para voltar): ",
-        minimo=0,
-        maximo=len(backups),
-        padrao=0,
-    )
-    if numero == 0:
-        return
-
-    escolhido = backups[numero - 1]
-
-    print(f"\nATENÇÃO: os dados atuais serão substituídos pelos do backup de "
-          f"{escolhido.criado_em:%d/%m/%Y %H:%M}.")
-    print("Antes disso, será feito um backup do estado atual.")
-
-    if not confirmar("Restaurar?"):
-        return
-
-    seguranca = restaurar_backup(escolhido.caminho)
-    print("\nBackup restaurado.")
-    print(f"O estado anterior foi salvo em {seguranca.name}.")
+    id_backup = ler_inteiro("\nID do backup para restaurar: ", minimo=1)
+    if confirmar(f"Restaurar backup #{id_backup}?"):
+        restaurar_backup(id_backup)
+        print("\nBackup restaurado.")
