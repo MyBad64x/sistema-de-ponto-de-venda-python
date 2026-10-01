@@ -7,6 +7,13 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 ## Funcionalidades
 
+**Login e usuários**
+- Primeiro acesso com cadastro do primeiro usuário dono
+- Autenticação por login e senha
+- Senha armazenada em hash seguro com PBKDF2-HMAC-SHA256
+- Perfis de acesso: dono e operador
+- Operador sem acesso a relatórios e ajuste de estoque
+
 **Produtos**
 - Cadastro, edição, listagem, desativação e reativação de produtos
 
@@ -32,6 +39,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Interface em terminal com menus
 - Testes automáticos
 - Backup automático ao fechar o caixa, backup manual e restauração
+- Login de usuários com perfis de acesso
 
 ## Tecnologias utilizadas
 
@@ -125,7 +133,6 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
-- Login de usuários
 - Impressão de comprovantes
 - Interface gráfica
 
