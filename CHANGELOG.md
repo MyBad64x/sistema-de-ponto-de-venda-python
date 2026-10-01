@@ -11,6 +11,27 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.10.0] - 2026-10-01
+
+### Adicionado
+
+- Sistema de login de usuários.
+- Tabela de usuários com senha armazenada em hash.
+- Primeiro usuário dono obrigatório no primeiro acesso.
+- Perfis de acesso: `dono` e `operador`.
+- Operador sem acesso a relatórios e ajuste de estoque.
+
+### Alterado
+
+- Fluxo de inicialização agora começa com autenticação antes do menu principal.
+- README atualizado para documentar login e permissões.
+
+### Segurança
+
+- Senhas nunca são gravadas em texto puro; o sistema usa hash PBKDF2 com salt aleatório.
+
+---
+
 ## [1.9.0] - 2026-09-30
 
 ### Adicionado
