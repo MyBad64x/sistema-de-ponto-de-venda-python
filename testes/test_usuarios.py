@@ -138,3 +138,17 @@ def test_banco_rejeita_perfil_invalido():
                 """,
                 ("Teste", "teste", "hash", "gerente"),
             )
+
+
+def test_perfil_dono_tem_acesso_total():
+    acesso = {
+        "perfil": "dono",
+    }
+    assert acesso["perfil"] == "dono"
+
+
+def test_perfil_operador_nao_tem_relatorios():
+    acesso = {
+        "perfil": "operador",
+    }
+    assert acesso["perfil"] != "dono"

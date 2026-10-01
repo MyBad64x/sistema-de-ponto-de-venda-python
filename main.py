@@ -1,14 +1,18 @@
 from pdv.banco import criar_tabelas
-from pdv.terminal.menu import menu_principal
+from pdv.terminal.menu import menu_login, menu_principal
 
 
 def main():
     criar_tabelas()
 
     try:
-        menu_principal()
+        usuario = menu_login()
+        if usuario is None:
+            print("\nEncerrando o sistema...")
+            return
+
+        menu_principal(usuario)
     except (KeyboardInterrupt, EOFError):
-        # Ctrl+C ou fim da entrada: sai sem mostrar erro na tela
         print("\n\nEncerrando o sistema...")
 
 
