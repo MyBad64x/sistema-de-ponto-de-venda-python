@@ -28,6 +28,7 @@ class Carrinho:
     def __init__(self):
         # {id_produto: quantidade} -> o mesmo produto nunca aparece em duas linhas
         self.itens = {}
+        self._adicoes = []
 
     def adicionar(self, id_produto, quantidade):
         """Adiciona (ou soma) um produto e devolve a linha atualizada do carrinho."""
@@ -44,6 +45,7 @@ class Carrinho:
             raise ErroPDV(f"O produto '{produto['nome']}' está desativado.")
 
         self.itens[id_produto] = self.itens.get(id_produto, 0) + quantidade
+        self._adicoes.extend([id_produto] * quantidade)
 
         return self._montar_item(produto)
 
@@ -51,9 +53,25 @@ class Carrinho:
         if id_produto not in self.itens:
             raise ErroPDV("Esse produto não está no carrinho.")
         del self.itens[id_produto]
+        self._adicoes = [id_adicionado for id_adicionado in self._adicoes if id_adicionado != id_produto]
+
+    def desfazer_ultima_adicao(self):
+        """Remove uma unidade do produto adicionado mais recentemente."""
+        if not self._adicoes:
+            raise ErroPDV("Não há uma adição recente para desfazer.")
+
+        id_produto = self._adicoes.pop()
+        quantidade = self.itens[id_produto] - 1
+        if quantidade:
+            self.itens[id_produto] = quantidade
+        else:
+            del self.itens[id_produto]
+
+        return id_produto
 
     def limpar(self):
         self.itens.clear()
+        self._adicoes.clear()
 
     def esta_vazio(self):
         return len(self.itens) == 0

@@ -52,12 +52,13 @@ def registrar_compra(
     referencia="",
     observacao="",
     data_compra=None,
+    custos_iniciais=None,
 ):
     """Registra uma compra e atualiza estoque e custo médio atomicamente.
 
     Cada item é uma tupla (id_produto, quantidade, custo_unitario). Produtos
-    com saldo positivo e custo desconhecido precisam ter o custo inicial
-    informado antes da compra para evitar uma média incorreta.
+    com saldo positivo e custo desconhecido exigem que custos_iniciais informe
+    o custo do saldo atual. Esse custo só é salvo se a compra for confirmada.
     """
     try:
         itens = list(itens)
@@ -66,6 +67,12 @@ def registrar_compra(
 
     if not itens:
         raise ErroPDV("Informe pelo menos um item para a compra.")
+
+    custos_iniciais = custos_iniciais or {}
+    custos_iniciais = {
+        id_produto: _validar_custo_unitario(custo)
+        for id_produto, custo in custos_iniciais.items()
+    }
 
     itens_validos = []
     produtos_incluidos = set()
@@ -96,12 +103,16 @@ def registrar_compra(
             produto = obter_produto(conn, id_produto)
             estoque_atual = produto["estoque"]
             custo_medio = produto["custo_medio"]
+            custo_inicial = None
 
             if estoque_atual > 0 and custo_medio is None:
-                raise ErroPDV(
-                    f"Informe o custo inicial do produto '{produto['nome']}' "
-                    "antes de registrar a compra."
-                )
+                custo_inicial = custos_iniciais.get(id_produto)
+                if custo_inicial is None:
+                    raise ErroPDV(
+                        f"Informe o custo inicial do produto '{produto['nome']}' "
+                        "antes de registrar a compra."
+                    )
+                custo_medio = custo_inicial
 
             if estoque_atual <= 0:
                 novo_custo_medio = custo_unitario
@@ -113,7 +124,7 @@ def registrar_compra(
                 )
 
             itens_calculados.append(
-                (produto, quantidade, custo_unitario, novo_custo_medio)
+                (produto, quantidade, custo_unitario, novo_custo_medio, custo_inicial)
             )
 
         if data_compra is None:
@@ -135,7 +146,23 @@ def registrar_compra(
             "SELECT data_compra FROM compras WHERE id = ?", (id_compra,)
         ).fetchone()["data_compra"]
 
-        for produto, quantidade, custo_unitario, novo_custo_medio in itens_calculados:
+        for produto, quantidade, custo_unitario, novo_custo_medio, custo_inicial in itens_calculados:
+            if custo_inicial is not None:
+                conn.execute(
+                    "UPDATE produtos SET custo_medio = ? WHERE id = ?",
+                    (custo_inicial, produto["id"]),
+                )
+                registrar_movimentacao(
+                    conn,
+                    produto["id"],
+                    CUSTO_INICIAL,
+                    0,
+                    f"Custo inicial informado na compra #{id_compra}",
+                    compra_id=id_compra,
+                    custo_unitario=custo_inicial,
+                    data_movimentacao=data_registro,
+                )
+
             conn.execute(
                 "UPDATE produtos SET estoque = estoque + ?, custo_medio = ? WHERE id = ?",
                 (quantidade, novo_custo_medio, produto["id"]),
@@ -178,20 +205,36 @@ def ajustar_estoque(id_produto, novo_estoque, observacao=""):
 
     O histórico guarda a diferença (positiva ou negativa), não o valor final.
     """
-    if novo_estoque < 0:
-        raise ErroPDV("O estoque não pode ser negativo.")
+    return ajustar_estoque_em_lote({id_produto: novo_estoque}, observacao)[0]
+
+
+def ajustar_estoque_em_lote(contagens, observacao="Contagem de estoque"):
+    """Aplica várias contagens numa transação e registra somente as diferenças."""
+    if not contagens:
+        raise ErroPDV("Informe ao menos um produto para a contagem.")
+
+    for novo_estoque in contagens.values():
+        if novo_estoque < 0:
+            raise ErroPDV("O estoque não pode ser negativo.")
 
     with conexao() as conn:
-        produto = obter_produto(conn, id_produto)
-        diferenca = novo_estoque - produto["estoque"]
+        resultados = []
 
-        if diferenca == 0:
+        for id_produto, novo_estoque in contagens.items():
+            produto = obter_produto(conn, id_produto)
+            diferenca = novo_estoque - produto["estoque"]
+
+            if diferenca == 0:
+                continue
+
+            conn.execute(
+                "UPDATE produtos SET estoque = ? WHERE id = ?",
+                (novo_estoque, id_produto),
+            )
+            registrar_movimentacao(conn, id_produto, AJUSTE, diferenca, observacao)
+            resultados.append(ResultadoEstoque(produto["nome"], produto["estoque"], novo_estoque))
+
+        if not resultados:
             raise ErroPDV("O estoque já está com esse valor; nenhum ajuste feito.")
 
-        conn.execute(
-            "UPDATE produtos SET estoque = ? WHERE id = ?",
-            (novo_estoque, id_produto),
-        )
-        registrar_movimentacao(conn, id_produto, AJUSTE, diferenca, observacao)
-
-    return ResultadoEstoque(produto["nome"], produto["estoque"], novo_estoque)
+    return resultados

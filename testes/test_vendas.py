@@ -58,6 +58,30 @@ def test_total_e_remocao(caixa, carrinho, coca, bala):
         carrinho.remover(coca)
 
 
+def test_desfazer_ultima_adicao_remove_uma_unidade(caixa, carrinho, coca, bala):
+    carrinho.adicionar(coca, 2)
+    carrinho.adicionar(bala, 1)
+
+    assert carrinho.desfazer_ultima_adicao() == bala
+    assert carrinho.itens == {coca: 2}
+    assert carrinho.desfazer_ultima_adicao() == coca
+    assert carrinho.itens == {coca: 1}
+
+
+def test_desfazer_sem_adicoes_disponiveis(carrinho):
+    with pytest.raises(ErroPDV, match="Não há uma adição recente"):
+        carrinho.desfazer_ultima_adicao()
+
+
+def test_remover_produto_remove_adicoes_correspondentes_do_historico(caixa, carrinho, coca, bala):
+    carrinho.adicionar(coca, 1)
+    carrinho.adicionar(bala, 1)
+    carrinho.remover(coca)
+
+    assert carrinho.desfazer_ultima_adicao() == bala
+    assert carrinho.esta_vazio()
+
+
 # ---------------------------------------------------------------- venda
 
 def test_venda_completa(caixa, carrinho, coca, bala):

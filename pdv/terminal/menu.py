@@ -24,11 +24,17 @@ from pdv.caixa import (
 from pdv.carrinho import Carrinho
 from pdv.comprovante import gerar_comprovante, salvar_comprovante
 from pdv.erros import ErroPDV, EstoqueInsuficiente
-from pdv.estoque import ajustar_estoque, entrada_estoque
+from pdv.estoque import (
+    ajustar_estoque,
+    ajustar_estoque_em_lote,
+    registrar_compra as registrar_compra_estoque,
+)
 from pdv.movimentacoes import listar_movimentacoes
 from pdv.produtos import (
     ativar_produto,
     buscar_produto,
+    buscar_produto_por_codigo_barras,
+    buscar_produtos_por_nome,
     cadastrar_produto,
     desativar_produto,
     editar_produto,
@@ -258,9 +264,10 @@ def menu_vendas():
 
 def menu_estoque():
     executar_menu("ESTOQUE", [
-        ("1", "Entrada de estoque", entrada),
+        ("1", "Compra/reposição", entrada),
         ("2", "Movimentações", movimentacoes),
-        ("3", "Ajuste de estoque", ajuste),
+        ("3", "Contagem por leitura", ajustar_por_contagem),
+        ("4", "Ajuste manual", ajuste),
     ])
 
 
@@ -297,8 +304,9 @@ def cadastrar():
     nome = ler_texto("\nNome do produto: ")
     preco = ler_decimal("Preço: R$ ", minimo=0)
     estoque = ler_inteiro("Estoque inicial: ", minimo=0)
+    codigo_barras = ler_texto("Código de barras (ENTER para ignorar): ", obrigatorio=False)
 
-    id_produto = cadastrar_produto(nome, preco, estoque)
+    id_produto = cadastrar_produto(nome, preco, estoque, codigo_barras)
     print(f"\nProduto '{nome}' cadastrado com o ID {id_produto}.")
 
 
@@ -314,6 +322,34 @@ def _pedir_produto(mensagem="\nID do produto: "):
     return produto
 
 
+def _produto_por_entrada(entrada):
+    """Resolve leitura de código de barras ou busca parcial pelo nome."""
+    entrada = (entrada or "").strip()
+    if not entrada:
+        raise ErroPDV("Informe um código de barras, nome ou ID de produto.")
+
+    produto = buscar_produto_por_codigo_barras(entrada, incluir_inativos=True)
+
+    if produto is not None:
+        if not produto["ativo"]:
+            raise ErroPDV(f"O produto '{produto['nome']}' está desativado.")
+        return produto
+
+    resultados = buscar_produtos_por_nome(entrada)
+    if not resultados:
+        raise ErroPDV(f"Nenhum produto encontrado para '{entrada}'.")
+    if len(resultados) == 1:
+        return resultados[0]
+
+    print("\nMais de um produto encontrado:")
+    mostrar_produtos(resultados)
+    id_produto = ler_inteiro("ID do produto desejado: ", minimo=1)
+    produto = next((item for item in resultados if item["id"] == id_produto), None)
+    if produto is None:
+        raise ErroPDV("O ID escolhido não está entre os resultados da busca.")
+    return produto
+
+
 def editar():
     mostrar_produtos(listar_produtos())
     produto = _pedir_produto()
@@ -323,8 +359,17 @@ def editar():
     preco = ler_decimal(
         f"Preço [{dinheiro(produto['preco'])}]: R$ ", minimo=0, padrao=produto["preco"]
     )
+    codigo_atual = produto["codigo_barras"] or "sem código"
+    codigo_barras = ler_texto(
+        f"Código de barras [{codigo_atual}] (ENTER mantém, - remove): ",
+        obrigatorio=False,
+    )
+    if codigo_barras == "-":
+        codigo_barras = ""
+    elif not codigo_barras:
+        codigo_barras = None
 
-    editar_produto(produto["id"], nome, preco)
+    editar_produto(produto["id"], nome, preco, codigo_barras)
     print(f"\nProduto '{nome}' atualizado.")
     print("Para mudar o estoque, use Estoque > Entrada ou Ajuste.")
 
@@ -354,15 +399,28 @@ def reativar():
 # ---------------------------------------------------------------- vendas
 
 def adicionar_ao_carrinho():
-    mostrar_produtos(listar_produtos())
-    id_produto = ler_inteiro("\nID do produto: ", minimo=1)
-    quantidade = ler_inteiro("Quantidade: ", minimo=1)
+    print("\nLeia o código de barras ou digite o nome. ENTER encerra; - desfaz a última unidade.")
 
-    item = carrinho.adicionar(id_produto, quantidade)
-    print(f"\n{item.nome} no carrinho: {item.quantidade} un. ({dinheiro(item.subtotal)})")
+    while True:
+        entrada = input("\nProduto: ").strip()
+        if not entrada:
+            return
+        if entrada == "-":
+            id_produto = carrinho.desfazer_ultima_adicao()
+            produto = buscar_produto(id_produto)
+            print(f"Adição desfeita: {produto['nome']}.")
+            continue
 
-    if item.quantidade > item.estoque:
-        print(f"Atenção: só há {item.estoque} em estoque.")
+        try:
+            produto = _produto_por_entrada(entrada)
+            item = carrinho.adicionar(produto["id"], 1)
+        except ErroPDV as erro:
+            print(f"\n{erro}")
+            continue
+
+        print(f"{item.nome}: {item.quantidade} un. ({dinheiro(item.subtotal)})")
+        if item.quantidade > item.estoque:
+            print(f"Atenção: só há {item.estoque} em estoque.")
 
 
 def ver_carrinho():
@@ -458,21 +516,126 @@ def limpar():
 # ---------------------------------------------------------------- estoque
 
 def entrada():
-    mostrar_produtos(listar_produtos())
-    produto = _pedir_produto()
-    quantidade = ler_inteiro("Quantidade: ", minimo=1)
-    observacao = ler_texto("Observação: ", obrigatorio=False)
+    print("\nLeia os produtos recebidos ou digite o nome. Cada leitura adiciona uma unidade; ENTER conclui; - desfaz.")
+    itens = {}
+    adicoes = []
+    custos_iniciais = {}
 
-    resultado = entrada_estoque(produto["id"], quantidade, observacao)
-    print(
-        f"\nEntrada registrada: {resultado.nome_produto} "
-        f"({resultado.estoque_anterior} -> {resultado.estoque_atual})"
+    while True:
+        entrada = input("\nProduto: ").strip()
+        if not entrada:
+            break
+        if entrada == "-":
+            if not adicoes:
+                print("Não há leitura para desfazer.")
+                continue
+            id_produto = adicoes.pop()
+            itens[id_produto]["quantidade"] -= 1
+            if itens[id_produto]["quantidade"] == 0:
+                del itens[id_produto]
+                custos_iniciais.pop(id_produto, None)
+            print("Última unidade removida da compra.")
+            continue
+
+        try:
+            produto = _produto_por_entrada(entrada)
+        except ErroPDV as erro:
+            print(f"\n{erro}")
+            continue
+
+        item = itens.get(produto["id"])
+        if item is None:
+            if produto["estoque"] > 0 and produto["custo_medio"] is None:
+                custo_inicial = ler_decimal(
+                    f"Custo unitário do estoque atual de {produto['nome']}: R$ ",
+                    minimo=0,
+                )
+                custos_iniciais[produto["id"]] = custo_inicial
+
+            custo_unitario = ler_decimal(
+                f"Custo unitário da compra de {produto['nome']}: R$ ", minimo=0
+            )
+            item = {"quantidade": 0, "custo_unitario": custo_unitario}
+            itens[produto["id"]] = item
+
+        item["quantidade"] += 1
+        adicoes.append(produto["id"])
+        print(f"{produto['nome']}: {item['quantidade']} un. recebidas.")
+
+    if not itens:
+        print("\nNenhum produto foi incluído na compra.")
+        return
+
+    fornecedor = ler_texto("Fornecedor (opcional): ", obrigatorio=False)
+    referencia = ler_texto("Referência do comprovante (opcional): ", obrigatorio=False)
+    observacao = ler_texto("Observação (opcional): ", obrigatorio=False)
+    id_compra = registrar_compra_estoque(
+        [
+            (id_produto, item["quantidade"], item["custo_unitario"])
+            for id_produto, item in itens.items()
+        ],
+        fornecedor=fornecedor,
+        referencia=referencia,
+        observacao=observacao,
+        custos_iniciais=custos_iniciais,
     )
+    print(f"\nCompra #{id_compra} registrada.")
+
+
+def ajustar_por_contagem():
+    print("\nLeia cada unidade contada ou digite o nome. ENTER conclui; - desfaz a última leitura.")
+    contagens = {}
+    adicoes = []
+
+    while True:
+        entrada = input("\nProduto: ").strip()
+        if not entrada:
+            break
+        if entrada == "-":
+            if not adicoes:
+                print("Não há leitura para desfazer.")
+                continue
+            id_produto = adicoes.pop()
+            contagens[id_produto] -= 1
+            if contagens[id_produto] == 0:
+                del contagens[id_produto]
+            print("Última unidade removida da contagem.")
+            continue
+
+        try:
+            produto = _produto_por_entrada(entrada)
+        except ErroPDV as erro:
+            print(f"\n{erro}")
+            continue
+
+        contagens[produto["id"]] = contagens.get(produto["id"], 0) + 1
+        adicoes.append(produto["id"])
+        print(f"{produto['nome']}: {contagens[produto['id']]} un. contadas.")
+
+    if not contagens:
+        print("\nNenhum produto foi contado.")
+        return
+
+    print("\nContagem informada:")
+    for id_produto, quantidade in contagens.items():
+        produto = buscar_produto(id_produto)
+        print(f"{produto['nome']}: contado {quantidade}, no sistema {produto['estoque']}.")
+
+    if not confirmar("Aplicar os ajustes desta contagem?"):
+        print("\nContagem cancelada; o estoque não foi alterado.")
+        return
+
+    resultados = ajustar_estoque_em_lote(contagens, "Contagem por código de barras")
+    for resultado in resultados:
+        print(
+            f"{resultado.nome_produto}: "
+            f"{resultado.estoque_anterior} -> {resultado.estoque_atual}"
+        )
 
 
 def ajuste():
     mostrar_produtos(listar_produtos())
-    produto = _pedir_produto()
+    produto = _produto_por_entrada(input("\nCódigo de barras ou nome do produto: "))
     novo_estoque = ler_inteiro(f"Estoque contado (atual {produto['estoque']}): ", minimo=0)
     observacao = ler_texto("Motivo do ajuste: ", obrigatorio=False)
 
