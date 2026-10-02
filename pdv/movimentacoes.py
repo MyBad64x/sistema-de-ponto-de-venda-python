@@ -5,9 +5,19 @@ from pdv.banco import conexao
 ENTRADA = "ENTRADA"
 AJUSTE = "AJUSTE"
 VENDA = "VENDA"
+CUSTO_INICIAL = "CUSTO_INICIAL"
 
 
-def registrar_movimentacao(conn, produto_id, tipo, quantidade, observacao=""):
+def registrar_movimentacao(
+    conn,
+    produto_id,
+    tipo,
+    quantidade,
+    observacao="",
+    compra_id=None,
+    custo_unitario=None,
+    data_movimentacao=None,
+):
     """Grava uma movimentação usando a conexão de quem chamou.
 
     Recebe a conexão em vez de abrir outra para que a alteração do estoque e o
@@ -15,9 +25,20 @@ def registrar_movimentacao(conn, produto_id, tipo, quantidade, observacao=""):
     são gravadas, ou nenhuma.
     """
     conn.execute("""
-        INSERT INTO movimentacoes_estoque(produto_id, tipo, quantidade, observacao)
-        VALUES (?, ?, ?, ?)
-    """, (produto_id, tipo, quantidade, observacao or ""))
+        INSERT INTO movimentacoes_estoque(
+            produto_id, tipo, quantidade, observacao, compra_id,
+            custo_unitario, data_movimentacao
+        )
+        VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
+    """, (
+        produto_id,
+        tipo,
+        quantidade,
+        observacao or "",
+        compra_id,
+        custo_unitario,
+        data_movimentacao,
+    ))
 
 
 def listar_movimentacoes(limite=None):

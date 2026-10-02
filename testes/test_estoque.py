@@ -2,7 +2,12 @@ import pytest
 
 from pdv.banco import conexao
 from pdv.erros import ErroPDV
-from pdv.estoque import ajustar_estoque, entrada_estoque
+from pdv.estoque import (
+    ajustar_estoque,
+    definir_custo_inicial,
+    entrada_estoque,
+    registrar_compra,
+)
 from pdv.movimentacoes import listar_movimentacoes
 from pdv.produtos import buscar_produto
 from pdv.vendas import finalizar_venda
@@ -28,6 +33,108 @@ def test_entrada_recusa_quantidade_zero_ou_negativa(coca, quantidade):
 def test_entrada_em_produto_inexistente():
     with pytest.raises(ErroPDV, match="não encontrado"):
         entrada_estoque(999, 1)
+
+
+def test_definir_custo_inicial_registra_historico(coca):
+    assert definir_custo_inicial(coca, 8.50) == 8.5
+    produto = buscar_produto(coca)
+
+    assert produto["custo_medio"] == 8.5
+    with conexao() as conn:
+        movimentacao = conn.execute(
+            "SELECT tipo, quantidade, custo_unitario FROM movimentacoes_estoque "
+            "WHERE produto_id = ? ORDER BY id DESC LIMIT 1",
+            (coca,),
+        ).fetchone()
+
+    assert tuple(movimentacao) == ("CUSTO_INICIAL", 0, 8.5)
+
+
+def test_custo_inicial_nao_pode_ser_informado_duas_vezes(coca):
+    definir_custo_inicial(coca, 8.5)
+
+    with pytest.raises(ErroPDV, match="já possui custo médio"):
+        definir_custo_inicial(coca, 9)
+
+
+def test_custo_inicial_negativo_e_recusado(coca):
+    with pytest.raises(ErroPDV, match="não pode ser negativo"):
+        definir_custo_inicial(coca, -1)
+
+
+def test_registrar_compra_atualiza_custo_medio_ponderado(coca):
+    definir_custo_inicial(coca, 10)
+
+    id_compra = registrar_compra(
+        [(coca, 3, 14)],
+        fornecedor="Distribuidora",
+        referencia="REC-123",
+        observacao="Compra semanal",
+    )
+
+    produto = buscar_produto(coca)
+    assert (produto["estoque"], produto["custo_medio"]) == (8, 11.5)
+
+    with conexao() as conn:
+        compra = conn.execute("SELECT * FROM compras WHERE id = ?", (id_compra,)).fetchone()
+        movimentacao = conn.execute(
+            "SELECT compra_id, custo_unitario, data_movimentacao "
+            "FROM movimentacoes_estoque WHERE compra_id = ?",
+            (id_compra,),
+        ).fetchone()
+
+    assert (compra["fornecedor"], compra["referencia"], compra["observacao"]) == (
+        "Distribuidora", "REC-123", "Compra semanal"
+    )
+    assert movimentacao["compra_id"] == id_compra
+    assert movimentacao["custo_unitario"] == 14
+    assert movimentacao["data_movimentacao"] == compra["data_compra"]
+
+
+def test_primeira_compra_define_custo_para_produto_sem_estoque():
+    from pdv.produtos import cadastrar_produto
+
+    id_produto = cadastrar_produto("Produto novo", 20, 0)
+    registrar_compra([(id_produto, 4, 8.25)])
+
+    produto = buscar_produto(id_produto)
+    assert (produto["estoque"], produto["custo_medio"]) == (4, 8.25)
+
+
+def test_compra_exige_custo_inicial_quando_estoque_existente_e_desconhecido(coca):
+    with pytest.raises(ErroPDV, match="Informe o custo inicial"):
+        registrar_compra([(coca, 2, 9)])
+
+    produto = buscar_produto(coca)
+    assert (produto["estoque"], produto["custo_medio"]) == (5, None)
+    with conexao() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM compras").fetchone()[0] == 0
+
+
+def test_compra_com_item_invalido_faz_rollback_completo(coca):
+    definir_custo_inicial(coca, 10)
+
+    with pytest.raises(ErroPDV, match="não encontrado"):
+        registrar_compra([(coca, 2, 12), (999, 1, 5)])
+
+    produto = buscar_produto(coca)
+    assert (produto["estoque"], produto["custo_medio"]) == (5, 10)
+    with conexao() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM compras").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize(
+    "itens",
+    [
+        [],
+        [(1, 0, 5)],
+        [(1, 1, -1)],
+        [(1, 1, 5), (1, 2, 6)],
+    ],
+)
+def test_compra_recusa_dados_invalidos(itens):
+    with pytest.raises(ErroPDV):
+        registrar_compra(itens)
 
 
 def test_ajuste_registra_a_diferenca(coca):
