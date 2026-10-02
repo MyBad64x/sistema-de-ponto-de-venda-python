@@ -2,6 +2,7 @@ import pytest
 
 from pdv.banco import conexao
 from pdv.erros import ErroPDV, EstoqueInsuficiente
+from pdv.estoque import definir_custo_inicial, registrar_compra
 from pdv.movimentacoes import listar_movimentacoes
 from pdv.produtos import buscar_produto, cadastrar_produto, desativar_produto
 from pdv.vendas import finalizar_venda
@@ -85,6 +86,34 @@ def test_venda_completa(caixa, carrinho, coca, bala):
 
     vendas_no_historico = [m for m in listar_movimentacoes() if m["tipo"] == "VENDA"]
     assert {m["quantidade"] for m in vendas_no_historico} == {-2, -3}
+
+
+def test_venda_guarda_o_custo_medio_vigente(caixa, carrinho, coca):
+    definir_custo_inicial(coca, 8)
+    carrinho.adicionar(coca, 2)
+    finalizar_venda(carrinho, "PIX")
+
+    registrar_compra([(coca, 2, 14)])
+
+    with conexao() as conn:
+        item_vendido = conn.execute(
+            "SELECT valor_unitario, custo_unitario FROM itens_vendas"
+        ).fetchone()
+
+    assert tuple(item_vendido) == (12.5, 8)
+    assert buscar_produto(coca)["custo_medio"] == 10.4
+
+
+def test_venda_sem_custo_conhecido_nao_inventa_custo(caixa, carrinho, coca):
+    carrinho.adicionar(coca, 1)
+    finalizar_venda(carrinho, "PIX")
+
+    with conexao() as conn:
+        custo_venda = conn.execute(
+            "SELECT custo_unitario FROM itens_vendas"
+        ).fetchone()[0]
+
+    assert custo_venda is None
 
 
 def test_centavos_sao_gravados_arredondados(caixa, carrinho, bala):

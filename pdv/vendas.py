@@ -106,9 +106,17 @@ def finalizar_venda(
 
         for produto, quantidade in itens:
             conn.execute("""
-                INSERT INTO itens_vendas(venda_id, produto_id, quantidade, valor_unitario)
-                VALUES (?, ?, ?, ?)
-            """, (id_venda, produto["id"], quantidade, produto["preco"]))
+                INSERT INTO itens_vendas(
+                    venda_id, produto_id, quantidade, valor_unitario, custo_unitario
+                )
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                id_venda,
+                produto["id"],
+                quantidade,
+                produto["preco"],
+                produto["custo_medio"],
+            ))
 
             # "estoque - ?" faz a conta no próprio banco, com o valor mais atual
             conn.execute(
