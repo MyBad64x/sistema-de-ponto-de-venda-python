@@ -5,6 +5,8 @@ from pdv.movimentacoes import listar_movimentacoes
 from pdv.produtos import (
     ativar_produto,
     buscar_produto,
+    buscar_produto_por_codigo_barras,
+    buscar_produtos_por_nome,
     cadastrar_produto,
     desativar_produto,
     editar_produto,
@@ -19,6 +21,67 @@ def test_cadastrar_produto(coca):
     assert produto["preco"] == 12.50
     assert produto["estoque"] == 5
     assert produto["ativo"] == 1
+
+
+def test_cadastrar_e_buscar_codigo_preserva_zeros_a_esquerda():
+    id_produto = cadastrar_produto("Refrigerante", 13, 0, " 0012345678905 ")
+
+    produto = buscar_produto_por_codigo_barras("0012345678905")
+
+    assert produto["id"] == id_produto
+    assert produto["codigo_barras"] == "0012345678905"
+
+
+def test_codigo_de_barras_duplicado_e_recusado(coca):
+    from pdv.produtos import editar_produto
+
+    editar_produto(coca, "Coca-Cola 2L", 12.5, "789123")
+
+    with pytest.raises(ErroPDV, match="código de barras já está cadastrado"):
+        cadastrar_produto("Outro produto", 5, 0, "789123")
+
+
+def test_busca_por_codigo_ignora_maiusculas_e_espacos():
+    id_produto = cadastrar_produto("Produto", 10, 0, "abC123")
+
+    produto = buscar_produto_por_codigo_barras("  ABC123  ")
+
+    assert produto["id"] == id_produto
+
+
+def test_busca_por_codigo_nao_encontra_codigo_vazio_ou_inexistente():
+    assert buscar_produto_por_codigo_barras("   ") is None
+    assert buscar_produto_por_codigo_barras("inexistente") is None
+
+
+def test_busca_por_nome_parcial_e_sem_diferenciar_maiusculas(coca, bala):
+    produtos = buscar_produtos_por_nome("COCA")
+
+    assert [produto["id"] for produto in produtos] == [coca]
+    assert buscar_produtos_por_nome("   ") == []
+
+
+def test_busca_por_codigo_nao_retorna_produto_inativo(coca):
+    from pdv.produtos import editar_produto
+
+    editar_produto(coca, "Coca-Cola 2L", 12.5, "789123")
+    desativar_produto(coca)
+
+    assert buscar_produto_por_codigo_barras("789123") is None
+
+
+def test_editar_sem_codigo_preserva_codigo_existente(coca):
+    editar_produto(coca, "Coca-Cola 2L", 12.5, "789123")
+    editar_produto(coca, "Coca-Cola 2L 2L", 13)
+
+    assert buscar_produto(coca)["codigo_barras"] == "789123"
+
+
+def test_editar_codigo_vazio_remove_codigo_existente(coca):
+    editar_produto(coca, "Coca-Cola 2L", 12.5, "789123")
+    editar_produto(coca, "Coca-Cola 2L", 12.5, "")
+
+    assert buscar_produto(coca)["codigo_barras"] is None
 
 
 def test_estoque_inicial_entra_no_historico(coca):

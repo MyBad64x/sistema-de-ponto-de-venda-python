@@ -1,5 +1,7 @@
 """Cadastro de produtos."""
 
+import sqlite3
+
 from pdv.banco import conexao
 from pdv.erros import ErroPDV
 from pdv.movimentacoes import ENTRADA, registrar_movimentacao
@@ -16,6 +18,13 @@ def _validar_preco(preco):
     if preco < 0:
         raise ErroPDV("O preço não pode ser negativo.")
     return round(preco, 2)
+
+
+def _normalizar_codigo_barras(codigo_barras):
+    if codigo_barras is None:
+        return None
+    codigo_barras = str(codigo_barras).strip()
+    return codigo_barras or None
 
 
 def obter_produto(conn, id_produto):
@@ -38,6 +47,37 @@ def buscar_produto(id_produto):
         ).fetchone()
 
 
+def buscar_produto_por_codigo_barras(codigo_barras, incluir_inativos=False):
+    """Busca um produto ativo pelo código, preservando zeros à esquerda."""
+    codigo_barras = _normalizar_codigo_barras(codigo_barras)
+    if codigo_barras is None:
+        return None
+
+    sql = "SELECT * FROM produtos WHERE codigo_barras = ? COLLATE NOCASE"
+    if not incluir_inativos:
+        sql += " AND ativo = 1"
+
+    with conexao() as conn:
+        return conn.execute(sql, (codigo_barras,)).fetchone()
+
+
+def buscar_produtos_por_nome(nome):
+    """Busca produtos ativos cujo nome contenha o texto informado."""
+    nome = (nome or "").strip()
+    if not nome:
+        return []
+
+    with conexao() as conn:
+        return conn.execute(
+            """
+            SELECT * FROM produtos
+            WHERE nome LIKE ? COLLATE NOCASE AND ativo = 1
+            ORDER BY nome
+            """,
+            (f"%{nome}%",),
+        ).fetchall()
+
+
 def listar_produtos(incluir_inativos=False):
     sql = "SELECT * FROM produtos"
     if not incluir_inativos:
@@ -48,7 +88,7 @@ def listar_produtos(incluir_inativos=False):
         return conn.execute(sql).fetchall()
 
 
-def cadastrar_produto(nome, preco, estoque_inicial=0):
+def cadastrar_produto(nome, preco, estoque_inicial=0, codigo_barras=None):
     """Cadastra o produto e devolve o ID criado.
 
     O estoque inicial também entra no histórico de movimentações, assim a soma
@@ -56,25 +96,34 @@ def cadastrar_produto(nome, preco, estoque_inicial=0):
     """
     nome = _validar_nome(nome)
     preco = _validar_preco(preco)
+    codigo_barras = _normalizar_codigo_barras(codigo_barras)
     if estoque_inicial < 0:
         raise ErroPDV("O estoque inicial não pode ser negativo.")
 
-    with conexao() as conn:
-        cursor = conn.execute(
-            "INSERT INTO produtos(nome, preco, estoque) VALUES (?, ?, ?)",
-            (nome, preco, estoque_inicial),
-        )
-        id_produto = cursor.lastrowid
-
-        if estoque_inicial > 0:
-            registrar_movimentacao(
-                conn, id_produto, ENTRADA, estoque_inicial, "Estoque inicial"
+    try:
+        with conexao() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO produtos(nome, preco, estoque, codigo_barras)
+                VALUES (?, ?, ?, ?)
+                """,
+                (nome, preco, estoque_inicial, codigo_barras),
             )
+            id_produto = cursor.lastrowid
+
+            if estoque_inicial > 0:
+                registrar_movimentacao(
+                    conn, id_produto, ENTRADA, estoque_inicial, "Estoque inicial"
+                )
+    except sqlite3.IntegrityError as erro:
+        if "codigo_barras" not in str(erro):
+            raise
+        raise ErroPDV("Este código de barras já está cadastrado.") from erro
 
     return id_produto
 
 
-def editar_produto(id_produto, nome, preco):
+def editar_produto(id_produto, nome, preco, codigo_barras=None):
     """Altera nome e preço.
 
     O estoque não é editado aqui de propósito: mudanças de estoque passam pelo
@@ -83,12 +132,26 @@ def editar_produto(id_produto, nome, preco):
     nome = _validar_nome(nome)
     preco = _validar_preco(preco)
 
-    with conexao() as conn:
-        obter_produto(conn, id_produto)
-        conn.execute(
-            "UPDATE produtos SET nome = ?, preco = ? WHERE id = ?",
-            (nome, preco, id_produto),
-        )
+    try:
+        with conexao() as conn:
+            produto = obter_produto(conn, id_produto)
+            if codigo_barras is None:
+                codigo_barras = produto["codigo_barras"]
+            else:
+                codigo_barras = _normalizar_codigo_barras(codigo_barras)
+
+            conn.execute(
+                """
+                UPDATE produtos
+                SET nome = ?, preco = ?, codigo_barras = ?
+                WHERE id = ?
+                """,
+                (nome, preco, codigo_barras, id_produto),
+            )
+    except sqlite3.IntegrityError as erro:
+        if "codigo_barras" not in str(erro):
+            raise
+        raise ErroPDV("Este código de barras já está cadastrado.") from erro
 
 
 def desativar_produto(id_produto):

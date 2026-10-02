@@ -4,6 +4,7 @@ from pdv.banco import conexao
 from pdv.erros import ErroPDV
 from pdv.estoque import (
     ajustar_estoque,
+    ajustar_estoque_em_lote,
     definir_custo_inicial,
     entrada_estoque,
     registrar_compra,
@@ -111,6 +112,27 @@ def test_compra_exige_custo_inicial_quando_estoque_existente_e_desconhecido(coca
         assert conn.execute("SELECT COUNT(*) FROM compras").fetchone()[0] == 0
 
 
+def test_compra_pode_informar_custo_inicial_na_mesma_transacao(coca):
+    id_compra = registrar_compra(
+        [(coca, 3, 14)],
+        custos_iniciais={coca: 10},
+    )
+
+    produto = buscar_produto(coca)
+    assert (produto["estoque"], produto["custo_medio"]) == (8, 11.5)
+    with conexao() as conn:
+        movimentacoes = conn.execute(
+            "SELECT tipo, quantidade, custo_unitario, compra_id "
+            "FROM movimentacoes_estoque WHERE compra_id = ? ORDER BY id",
+            (id_compra,),
+        ).fetchall()
+
+    assert [tuple(movimentacao) for movimentacao in movimentacoes] == [
+        ("CUSTO_INICIAL", 0, 10, id_compra),
+        ("ENTRADA", 3, 14, id_compra),
+    ]
+
+
 def test_compra_com_item_invalido_faz_rollback_completo(coca):
     definir_custo_inicial(coca, 10)
 
@@ -152,6 +174,24 @@ def test_ajuste_sem_diferenca(coca):
 def test_ajuste_negativo_recusado(coca):
     with pytest.raises(ErroPDV):
         ajustar_estoque(coca, -1)
+
+
+def test_ajuste_em_lote_registra_diferencas_e_ignora_estoque_inalterado(coca, bala):
+    resultados = ajustar_estoque_em_lote({coca: 3, bala: 100})
+
+    assert [(item.nome_produto, item.estoque_anterior, item.estoque_atual) for item in resultados] == [
+        ("Coca-Cola 2L", 5, 3)
+    ]
+    assert buscar_produto(coca)["estoque"] == 3
+    assert buscar_produto(bala)["estoque"] == 100
+
+
+def test_ajuste_em_lote_faz_rollback_se_um_produto_nao_existir(coca, bala):
+    with pytest.raises(ErroPDV, match="não encontrado"):
+        ajustar_estoque_em_lote({coca: 3, 999: 4})
+
+    assert buscar_produto(coca)["estoque"] == 5
+    assert buscar_produto(bala)["estoque"] == 100
 
 
 def test_historico_sempre_bate_com_o_estoque(caixa, carrinho, coca, bala):
