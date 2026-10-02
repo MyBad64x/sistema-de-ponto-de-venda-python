@@ -16,12 +16,17 @@ z= correção de bugs no projeto
 ### Preparação
 
 - Banco preparado para códigos de barras, registros pesquisáveis de compras, custo médio ponderado e custo dos produtos no momento da venda.
-- Produtos e vendas antigos permanecem sem custo registrado até que novas compras forneçam esses dados.
+- Produtos antigos permanecem sem custo até informar um custo inicial; vendas antigas não recebem custo retroativo.
 
 ### Regras de negócio
 
 - Registro transacional de compras com fornecedor, referência, observação, data e itens vinculados às movimentações de estoque.
 - Reposição calcula o custo médio ponderado; produtos antigos com custo desconhecido exigem informar um custo inicial antes de ponderar novas compras.
+
+### Rentabilidade
+
+- Cada item vendido registra o custo médio vigente naquele momento; vendas sem custo conhecido mantêm esse campo vazio.
+- Cálculo de lucro bruto unitário, margem sobre o preço de venda e acréscimo sobre o custo, sem exibir esses dados no fluxo de venda.
 
 ## [1.10.0] - 2026-10-01
 
