@@ -16,14 +16,16 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 **Produtos**
 - Cadastro, edição, listagem, desativação e reativação de produtos
+- Cadastro de código de barras e busca operacional por código ou nome
 
 **Estoque**
-- Entrada de estoque (chegada de mercadoria)
-- Ajuste de estoque (inventário, perdas, quebras)
+- Reposição por leitura, com registro de custo, fornecedor e referência de compra
+- Contagem de estoque por leitura e ajuste manual de inventário, perdas e quebras
 - Histórico de todas as movimentações (entradas, ajustes e vendas)
 
 **Vendas**
 - Carrinho de compras (adicionar, remover, limpar)
+- Leitura de código adiciona uma unidade; é possível desfazer a última leitura
 - Finalização de venda com escolha da forma de pagamento e troco no pagamento em dinheiro
 - Aviso de estoque insuficiente, com opção de vender mesmo assim
 - Comprovante em texto ao finalizar a venda, salvo em arquivo e pronto para imprimir
@@ -134,8 +136,7 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
-- Tela para registrar e pesquisar compras com seus itens e comprovantes identificadores.
-- Leitura de códigos de barras para vendas, reposição e contagem de estoque.
+- Tela para pesquisar compras por fornecedor, data e referência do comprovante.
 - Interface de estoque e precificação com custo médio ponderado e análise de rentabilidade para o perfil dono.
 - Relatórios de rentabilidade por período e potencial do estoque atual.
 - Impressão de comprovantes

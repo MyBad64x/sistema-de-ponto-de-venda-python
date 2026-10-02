@@ -28,6 +28,12 @@ z= correção de bugs no projeto
 - Cada item vendido registra o custo médio vigente naquele momento; vendas sem custo conhecido mantêm esse campo vazio.
 - Cálculo de lucro bruto unitário, margem sobre o preço de venda e acréscimo sobre o custo, sem exibir esses dados no fluxo de venda.
 
+### Leitor de código de barras
+
+- Cadastro e edição de código de barras; busca operacional por código ou nome do produto.
+- Venda e reposição aceitam leituras consecutivas, adicionando uma unidade por leitura; `-` desfaz a última unidade.
+- Contagem por leitura acumula as unidades e aplica os ajustes numa transação após confirmação.
+
 ## [1.10.0] - 2026-10-01
 
 ### Adicionado
