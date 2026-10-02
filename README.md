@@ -133,8 +133,9 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
+- Tela para registrar e pesquisar compras com seus itens e comprovantes identificadores.
 - Leitura de códigos de barras para vendas, reposição e contagem de estoque.
-- Registro pesquisável de compras, custo médio ponderado e análise de rentabilidade para o perfil dono.
+- Interface de estoque e precificação com custo médio ponderado e análise de rentabilidade para o perfil dono.
 - Impressão de comprovantes
 - Interface gráfica
 

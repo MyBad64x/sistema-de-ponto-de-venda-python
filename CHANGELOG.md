@@ -18,6 +18,11 @@ z= correção de bugs no projeto
 - Banco preparado para códigos de barras, registros pesquisáveis de compras, custo médio ponderado e custo dos produtos no momento da venda.
 - Produtos e vendas antigos permanecem sem custo registrado até que novas compras forneçam esses dados.
 
+### Regras de negócio
+
+- Registro transacional de compras com fornecedor, referência, observação, data e itens vinculados às movimentações de estoque.
+- Reposição calcula o custo médio ponderado; produtos antigos com custo desconhecido exigem informar um custo inicial antes de ponderar novas compras.
+
 ## [1.10.0] - 2026-10-01
 
 ### Adicionado
