@@ -66,6 +66,7 @@ sistema-de-ponto-de-venda-python/
 │   ├── carrinho.py          # carrinho da venda em andamento
 │   ├── vendas.py            # finalização de vendas
 │   ├── relatorios.py        # relatórios de vendas por período
+│   ├── precificacao.py      # cálculos de lucro bruto e percentuais
 │   ├── backup.py            # backup e restauração do banco
 │   ├── comprovante.py       # comprovante de venda em texto
 │   │
@@ -136,6 +137,7 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 - Tela para registrar e pesquisar compras com seus itens e comprovantes identificadores.
 - Leitura de códigos de barras para vendas, reposição e contagem de estoque.
 - Interface de estoque e precificação com custo médio ponderado e análise de rentabilidade para o perfil dono.
+- Relatórios de rentabilidade por período e potencial do estoque atual.
 - Impressão de comprovantes
 - Interface gráfica
 
