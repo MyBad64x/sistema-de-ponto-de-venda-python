@@ -56,7 +56,8 @@ def criar_tabelas():
                 estoque INTEGER NOT NULL,
                 ativo INTEGER DEFAULT 1,
                 codigo_barras TEXT,
-                custo_medio REAL
+                custo_medio REAL,
+                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -163,6 +164,8 @@ def _atualizar_banco_antigo(conn):
         conn.execute("ALTER TABLE produtos ADD COLUMN codigo_barras TEXT")
     if "custo_medio" not in colunas_produtos:
         conn.execute("ALTER TABLE produtos ADD COLUMN custo_medio REAL")
+    if "data_cadastro" not in colunas_produtos:
+        conn.execute("ALTER TABLE produtos ADD COLUMN data_cadastro TIMESTAMP")
 
     colunas_movimentacoes = {
         coluna["name"] for coluna in conn.execute("PRAGMA table_info(movimentacoes_estoque)")

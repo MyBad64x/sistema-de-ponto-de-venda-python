@@ -104,8 +104,8 @@ def cadastrar_produto(nome, preco, estoque_inicial=0, codigo_barras=None):
         with conexao() as conn:
             cursor = conn.execute(
                 """
-                INSERT INTO produtos(nome, preco, estoque, codigo_barras)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO produtos(nome, preco, estoque, codigo_barras, data_cadastro)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """,
                 (nome, preco, estoque_inicial, codigo_barras),
             )

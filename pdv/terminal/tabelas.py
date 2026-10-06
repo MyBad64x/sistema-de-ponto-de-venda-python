@@ -30,6 +30,62 @@ def mostrar_produtos(produtos, mostrar_status=False):
     print("=" * largura)
 
 
+def mostrar_produtos_gerenciais(produtos):
+    if not produtos:
+        print("\nNenhum produto encontrado.")
+        return
+
+    largura = 132
+    print("\n" + "=" * largura)
+    print(
+        f"{'ID':<5}| {'PRODUTO':<22}| {'PREÇO':>12}| {'CUSTO':>12}| "
+        f"{'LUCRO/UN.':>12}| {'MARGEM':>9}| {'ESTOQUE':>8}| ÚLTIMA ATIVIDADE"
+    )
+    print("=" * largura)
+
+    for produto in produtos:
+        custo = _dinheiro_ou_traco(produto["custo_medio"])
+        lucro = _dinheiro_ou_traco(produto["lucro_bruto_unitario"])
+        margem = (
+            "-" if produto["margem_bruta_percentual"] is None
+            else f"{produto['margem_bruta_percentual']:.2f}%"
+        )
+        atividade = produto["ultima_atividade"] or "sem data"
+        print(
+            f"{produto['id']:<5}| {cortar(produto['nome'], 21):<22}| "
+            f"{dinheiro(produto['preco']):>12}| {custo:>12}| {lucro:>12}| "
+            f"{margem:>9}| {produto['estoque']:>8}| {atividade}"
+        )
+
+    print("=" * largura)
+
+
+def mostrar_compras(compras):
+    if not compras:
+        print("\nNenhuma compra encontrada.")
+        return
+
+    largura = 132
+    print("\n" + "=" * largura)
+    print(
+        f"{'COMPRA':<8}| {'DATA':<17}| {'FORNECEDOR':<24}| {'REFERÊNCIA':<18}| "
+        f"{'PRODUTO':<22}| {'QTD':>5}| {'CUSTO/UN.':>12}| TOTAL"
+    )
+    print("=" * largura)
+
+    for compra in compras:
+        print(
+            f"{compra['compra_id']:<8}| {compra['data_compra']:<17}| "
+            f"{cortar(compra['fornecedor'] or '-', 23):<24}| "
+            f"{cortar(compra['referencia'] or '-', 17):<18}| "
+            f"{cortar(compra['produto'], 21):<22}| {compra['quantidade']:>5}| "
+            f"{_dinheiro_ou_traco(compra['custo_unitario']):>12}| "
+            f"{_dinheiro_ou_traco(compra['total_item'])}"
+        )
+
+    print("=" * largura)
+
+
 def mostrar_carrinho(itens, total):
     if not itens:
         print("\nCarrinho vazio.")
