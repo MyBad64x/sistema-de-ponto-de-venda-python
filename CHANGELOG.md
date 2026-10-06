@@ -34,6 +34,14 @@ z= correção de bugs no projeto
 - Venda e reposição aceitam leituras consecutivas, adicionando uma unidade por leitura; `-` desfaz a última unidade.
 - Contagem por leitura acumula as unidades e aplica os ajustes numa transação após confirmação.
 
+### Gestão e precificação
+
+- Área do dono com pesquisa de compras por fornecedor, referência e período.
+- Estoque filtrável por produtos parados, recentes e sem custo; ordenação por preço, custo, estoque, lucro bruto e margem.
+- Simulação do lucro bruto, margem e acréscimo ao editar o preço, salvando somente após confirmação e sem sugerir preços automaticamente.
+- Relatório de lucro bruto realizado por período e potencial do estoque atual; produtos sem custo conhecido são destacados e excluídos dos totais calculáveis.
+- Produtos antigos sem data de cadastro permanecem com a data desconhecida, sem atribuição retroativa.
+
 ## [1.10.0] - 2026-10-01
 
 ### Adicionado
