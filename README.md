@@ -22,6 +22,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Reposição por leitura, com registro de custo, fornecedor e referência de compra
 - Contagem de estoque por leitura e ajuste manual de inventário, perdas e quebras
 - Histórico de todas as movimentações (entradas, ajustes e vendas)
+- Área da dona para consultar compras, filtrar estoque e simular preços com custo e lucro bruto
 
 **Vendas**
 - Carrinho de compras (adicionar, remover, limpar)
@@ -35,6 +36,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 **Relatórios**
 - Resumo de vendas, produtos mais vendidos e vendas por dia, por período
+- Lucro bruto realizado por período e potencial do estoque atual, na área de gestão da dona
 
 **Geral**
 - Banco de dados SQLite criado automaticamente
@@ -68,6 +70,7 @@ sistema-de-ponto-de-venda-python/
 │   ├── carrinho.py          # carrinho da venda em andamento
 │   ├── vendas.py            # finalização de vendas
 │   ├── relatorios.py        # relatórios de vendas por período
+│   ├── gestao.py            # consultas administrativas de estoque e rentabilidade
 │   ├── precificacao.py      # cálculos de lucro bruto e percentuais
 │   ├── backup.py            # backup e restauração do banco
 │   ├── comprovante.py       # comprovante de venda em texto
@@ -136,9 +139,7 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 
 ## Próximas funcionalidades
 
-- Tela para pesquisar compras por fornecedor, data e referência do comprovante.
-- Interface de estoque e precificação com custo médio ponderado e análise de rentabilidade para o perfil dono.
-- Relatórios de rentabilidade por período e potencial do estoque atual.
+- Registro de despesas operacionais, como energia, e taxas de pagamento, se solicitado.
 - Impressão de comprovantes
 - Interface gráfica
 

@@ -7,6 +7,7 @@ se preocupar com o que ela faz.
 """
 
 from getpass import getpass
+from datetime import datetime
 
 from pdv import NOME_SISTEMA, VERSAO
 from pdv.banco import conexao
@@ -24,6 +25,12 @@ from pdv.caixa import (
 from pdv.carrinho import Carrinho
 from pdv.comprovante import gerar_comprovante, salvar_comprovante
 from pdv.erros import ErroPDV, EstoqueInsuficiente
+from pdv.gestao import (
+    listar_compras,
+    listar_produtos_gestao,
+    resumo_potencial_estoque,
+    resumo_rentabilidade,
+)
 from pdv.estoque import (
     ajustar_estoque,
     ajustar_estoque_em_lote,
@@ -52,9 +59,11 @@ from pdv.relatorios import (
 from pdv.terminal.tabelas import (
     mostrar_backups,
     mostrar_carrinho,
+    mostrar_compras,
     mostrar_historico_caixas,
     mostrar_movimentacoes,
     mostrar_produtos,
+    mostrar_produtos_gerenciais,
     mostrar_resumo_caixa,
     mostrar_produtos_mais_vendidos,
     mostrar_resumo_vendas,
@@ -76,6 +85,7 @@ from pdv.terminal.utilitarios import (
 )
 from pdv.usuarios import autenticar, criar_usuario
 from pdv.vendas import FORMAS_PAGAMENTO, finalizar_venda
+from pdv.precificacao import calcular_rentabilidade
 
 # a venda em andamento (fica na memória até ser finalizada)
 carrinho = Carrinho()
@@ -268,6 +278,7 @@ def menu_estoque():
         ("2", "Movimentações", movimentacoes),
         ("3", "Contagem por leitura", ajustar_por_contagem),
         ("4", "Ajuste manual", ajuste),
+        ("5", "Gestão e precificação", menu_gestao_estoque),
     ])
 
 
@@ -287,6 +298,16 @@ def menu_relatorios():
         ("1", "Resumo de vendas", relatorio_resumo),
         ("2", "Produtos mais vendidos", relatorio_produtos),
         ("3", "Vendas por dia", relatorio_por_dia),
+        ("4", "Lucro bruto por período", relatorio_rentabilidade),
+    ])
+
+
+def menu_gestao_estoque():
+    executar_menu("GESTÃO DE ESTOQUE", [
+        ("1", "Produtos, filtros e ordenação", consultar_produtos_gestao),
+        ("2", "Histórico de compras", consultar_compras),
+        ("3", "Precificar produto", precificar_produto),
+        ("4", "Potencial do estoque atual", mostrar_potencial_estoque),
     ])
 
 
@@ -766,6 +787,117 @@ def relatorio_por_dia():
     periodo = _escolher_periodo()
     _titulo_periodo("VENDAS POR DIA", periodo)
     mostrar_vendas_por_dia(vendas_por_dia(periodo))
+
+
+def relatorio_rentabilidade():
+    periodo = _escolher_periodo()
+    _titulo_periodo("LUCRO BRUTO DAS VENDAS", periodo)
+    resumo = resumo_rentabilidade(periodo)
+
+    print(f"\nFaturamento no período: {dinheiro(resumo.faturamento_total)}")
+    print(f"Faturamento com custo conhecido: {dinheiro(resumo.faturamento_com_custo)}")
+    print(f"Custo das mercadorias: {dinheiro(resumo.custo_das_mercadorias)}")
+    print(f"Lucro bruto: {dinheiro(resumo.lucro_bruto)}")
+    print(f"Margem bruta: {resumo.margem_bruta_percentual:.2f}%")
+    if resumo.unidades_sem_custo:
+        print(f"Unidades vendidas sem custo conhecido: {resumo.unidades_sem_custo}")
+
+
+def consultar_produtos_gestao():
+    filtros = {
+        "Todos": None,
+        "Parados há mais de 30 dias": "parados",
+        "Cadastrados nos últimos 30 dias": "recentes",
+        "Sem custo conhecido": "sem_custo",
+    }
+    ordenacoes = {
+        "Nome": "nome",
+        "Mais recentes": "recentes",
+        "Maior preço": "preco_maior",
+        "Menor preço": "preco_menor",
+        "Maior custo": "custo_maior",
+        "Menor custo": "custo_menor",
+        "Maior lucro por unidade": "lucro_maior",
+        "Menor lucro por unidade": "lucro_menor",
+        "Maior margem": "margem_maior",
+        "Menor margem": "margem_menor",
+        "Maior estoque": "estoque_maior",
+        "Menor estoque": "estoque_menor",
+    }
+
+    filtro = escolher("Filtro: ", tuple(filtros))
+    ordenacao = escolher("Ordenar por: ", tuple(ordenacoes))
+    produtos = listar_produtos_gestao(
+        filtro=filtros[filtro], ordenar_por=ordenacoes[ordenacao]
+    )
+    mostrar_produtos_gerenciais(produtos)
+
+
+def _ler_data_opcional(mensagem):
+    texto = ler_texto(mensagem, obrigatorio=False)
+    if not texto:
+        return None
+    try:
+        return datetime.strptime(texto, "%d/%m/%Y").date()
+    except ValueError as erro:
+        raise ErroPDV("Data inválida. Use dd/mm/aaaa.") from erro
+
+
+def consultar_compras():
+    fornecedor = ler_texto("Fornecedor (ENTER para todos): ", obrigatorio=False)
+    referencia = ler_texto("Referência (ENTER para todas): ", obrigatorio=False)
+    inicio = _ler_data_opcional("Data inicial (dd/mm/aaaa, ENTER para ignorar): ")
+    fim = _ler_data_opcional("Data final (dd/mm/aaaa, ENTER para ignorar): ")
+    compras = listar_compras(fornecedor, referencia, inicio, fim)
+    mostrar_compras(compras)
+
+
+def _mostrar_calculo_preco(preco, custo):
+    rentabilidade = calcular_rentabilidade(preco, custo)
+    if rentabilidade is None:
+        print("Custo desconhecido. Registre uma compra para calcular a rentabilidade.")
+        return
+
+    print(f"Lucro bruto por unidade: {dinheiro(rentabilidade.lucro_bruto_unitario)}")
+    if rentabilidade.margem_bruta_percentual is None:
+        print("Margem bruta: não calculável com preço zero.")
+    else:
+        print(f"Margem bruta sobre a venda: {rentabilidade.margem_bruta_percentual:.2f}%")
+    if rentabilidade.acrescimo_sobre_custo_percentual is None:
+        print("Acréscimo sobre custo: não calculável com custo zero.")
+    else:
+        print(f"Acréscimo sobre custo: {rentabilidade.acrescimo_sobre_custo_percentual:.2f}%")
+
+
+def precificar_produto():
+    entrada = input("\nCódigo de barras ou nome do produto: ")
+    produto = _produto_por_entrada(entrada)
+
+    print(f"\n{produto['nome']}")
+    print(f"Custo médio: {dinheiro(produto['custo_medio']) if produto['custo_medio'] is not None else 'desconhecido'}")
+    print(f"Preço atual: {dinheiro(produto['preco'])}")
+    _mostrar_calculo_preco(produto["preco"], produto["custo_medio"])
+
+    novo_preco = ler_decimal("Novo preço de venda: R$ ", minimo=0)
+    print("\nResultado com o novo preço:")
+    _mostrar_calculo_preco(novo_preco, produto["custo_medio"])
+
+    if confirmar("Salvar o novo preço?"):
+        editar_produto(produto["id"], produto["nome"], novo_preco)
+        print("\nPreço atualizado.")
+    else:
+        print("\nPreço não alterado.")
+
+
+def mostrar_potencial_estoque():
+    resumo = resumo_potencial_estoque()
+    print("\nPOTENCIAL DO ESTOQUE ATUAL (CUSTOS CONHECIDOS)")
+    print(f"Faturamento potencial: {dinheiro(resumo.faturamento_potencial)}")
+    print(f"Custo estimado: {dinheiro(resumo.custo_estimado)}")
+    print(f"Lucro bruto potencial: {dinheiro(resumo.lucro_bruto_potencial)}")
+    print(f"Margem bruta potencial: {resumo.margem_bruta_percentual:.2f}%")
+    if resumo.produtos_sem_custo:
+        print(f"Produtos em estoque sem custo conhecido: {resumo.produtos_sem_custo}")
 
 
 # ---------------------------------------------------------------- backup

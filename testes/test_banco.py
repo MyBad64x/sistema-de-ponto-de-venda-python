@@ -23,7 +23,7 @@ def test_cria_todas_as_tabelas():
 
 
 def test_tabelas_de_produto_compra_e_venda_tem_colunas_de_custo():
-    assert {"codigo_barras", "custo_medio"} <= _colunas("produtos")
+    assert {"codigo_barras", "custo_medio", "data_cadastro"} <= _colunas("produtos")
     assert {"fornecedor", "referencia", "data_compra", "observacao"} <= _colunas("compras")
     assert {"compra_id", "custo_unitario"} <= _colunas("movimentacoes_estoque")
     assert "custo_unitario" in _colunas("itens_vendas")
@@ -205,7 +205,8 @@ def test_migra_produtos_movimentacoes_e_vendas_sem_dados_de_custo(tmp_path, monk
 
     with conexao() as conn:
         produto = conn.execute(
-            "SELECT nome, codigo_barras, custo_medio FROM produtos WHERE id = 1"
+            "SELECT nome, codigo_barras, custo_medio, data_cadastro "
+            "FROM produtos WHERE id = 1"
         ).fetchone()
         movimentacao = conn.execute(
             "SELECT quantidade, compra_id, custo_unitario FROM movimentacoes_estoque"
@@ -214,7 +215,7 @@ def test_migra_produtos_movimentacoes_e_vendas_sem_dados_de_custo(tmp_path, monk
             "SELECT valor_unitario, custo_unitario FROM itens_vendas"
         ).fetchone()
 
-    assert tuple(produto) == ("Produto antigo", None, None)
+    assert tuple(produto) == ("Produto antigo", None, None, None)
     assert tuple(movimentacao) == (4, None, None)
     assert tuple(item_venda) == (15, None)
 

@@ -21,6 +21,7 @@ def test_cadastrar_produto(coca):
     assert produto["preco"] == 12.50
     assert produto["estoque"] == 5
     assert produto["ativo"] == 1
+    assert produto["data_cadastro"] is not None
 
 
 def test_cadastrar_e_buscar_codigo_preserva_zeros_a_esquerda():
