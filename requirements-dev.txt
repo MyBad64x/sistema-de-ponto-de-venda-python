@@ -1,2 +1,4 @@
-# Dependências para desenvolvimento (o sistema em si usa só a biblioteca padrão do Python)
+# Dependências para desenvolvimento e testes.
+-r requirements.txt
 pytest>=8
+pytest-qt>=4

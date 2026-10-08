@@ -41,6 +41,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 **Geral**
 - Banco de dados SQLite criado automaticamente
 - Interface em terminal com menus
+- Interface desktop experimental com login e janela inicial
 - Testes automáticos
 - Backup automático ao fechar o caixa, backup manual e restauração
 - Login de usuários com perfis de acesso
@@ -49,7 +50,9 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 - Python 3.10+
 - SQLite / SQL
+- PySide6 (interface desktop experimental)
 - pytest (testes automáticos)
+- pytest-qt (testes da interface desktop)
 - GitHub Actions (testes automáticos a cada pull request)
 - Git
 
@@ -74,6 +77,11 @@ sistema-de-ponto-de-venda-python/
 │   ├── precificacao.py      # cálculos de lucro bruto e percentuais
 │   ├── backup.py            # backup e restauração do banco
 │   ├── comprovante.py       # comprovante de venda em texto
+│   │
+│   ├── desktop/             # interface desktop experimental em PySide6
+│   │   ├── app.py           # inicialização da interface desktop
+│   │   ├── login.py         # login e primeiro acesso
+│   │   └── janela_principal.py # janela base após autenticação
 │   │
 │   └── terminal/            # interface de terminal
 │       ├── menu.py          # menus e ações
@@ -108,6 +116,17 @@ python main.py
 ```
 
 O banco é criado em `database/loja.db` na primeira execução. Bancos criados por versões anteriores são atualizados automaticamente.
+
+## Interface desktop experimental
+
+Instale as dependências de execução e abra a interface desktop:
+
+```bash
+pip install -r requirements.txt
+python -m pdv.desktop
+```
+
+Esta primeira etapa inclui login, cadastro do primeiro usuário dono e a janela base. Os fluxos completos continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
 
 ## Backups
 
