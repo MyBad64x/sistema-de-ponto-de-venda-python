@@ -4,7 +4,19 @@ import pytest
 
 from pdv.banco import conexao
 from pdv.erros import ErroPDV
-from pdv.usuarios import autenticar, criar_usuario
+from pdv.usuarios import autenticar, criar_usuario, existe_usuario_ativo
+
+
+def test_nao_existe_usuario_ativo_no_banco_novo():
+    assert not existe_usuario_ativo()
+
+
+def test_usuario_inativo_nao_conta_como_usuario_ativo():
+    id_usuario = criar_usuario("Alberto", "alberto", "senha-segura", "dono")
+    with conexao() as conn:
+        conn.execute("UPDATE usuarios SET ativo = 0 WHERE id = ?", (id_usuario,))
+
+    assert not existe_usuario_ativo()
 
 
 def test_cria_usuario_e_nao_expoe_senha():

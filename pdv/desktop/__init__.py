@@ -1,0 +1,1 @@
+"""Interface desktop experimental do PDV."""

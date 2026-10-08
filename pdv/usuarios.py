@@ -74,6 +74,15 @@ def _validar_senha(senha):
         raise ErroPDV("A senha deve ter pelo menos 8 caracteres.")
 
 
+def existe_usuario_ativo():
+    """Informa se já há algum usuário ativo cadastrado no sistema."""
+    with conexao() as conn:
+        total = conn.execute(
+            "SELECT COUNT(*) FROM usuarios WHERE ativo = 1"
+        ).fetchone()[0]
+    return total > 0
+
+
 def criar_usuario(nome, login, senha, perfil):
     """Cria um usuário e retorna seu ID."""
 
