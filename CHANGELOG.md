@@ -47,6 +47,11 @@ z= correção de bugs no projeto
 - Busca de comprovantes não fiscais por número da venda, período e forma de pagamento no menu de vendas.
 - O conteúdo é reconstruído com os dados do banco, sem depender do arquivo TXT e sem impressão física.
 
+### Interface desktop
+
+- Início da interface experimental em PySide6 com login, criação do primeiro usuário dono e janela base.
+- A interface de terminal permanece como ponto de entrada principal enquanto os fluxos são migrados.
+
 ## [1.10.0] - 2026-10-01
 
 ### Adicionado
