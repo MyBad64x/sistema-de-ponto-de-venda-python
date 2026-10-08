@@ -1,13 +1,18 @@
+from datetime import date
+
 import pytest
 
+from pdv.banco import conexao
 from pdv.comprovante import (
     LARGURA,
     gerar_comprovante,
+    listar_comprovantes,
     montar_texto,
     pasta_comprovantes,
     salvar_comprovante,
 )
 from pdv.erros import ErroPDV
+from pdv.relatorios import Periodo
 from pdv.vendas import finalizar_venda
 
 
@@ -78,3 +83,42 @@ def test_salvar_cria_arquivo_com_o_texto(caixa, carrinho, coca, bala):
 def test_venda_inexistente():
     with pytest.raises(ErroPDV, match="não encontrada"):
         gerar_comprovante(999)
+
+
+def test_lista_venda_para_comprovante_sem_arquivo_salvo(caixa, carrinho, coca, bala):
+    resultado = _vender(caixa, carrinho, coca, bala, forma="PIX")
+
+    vendas = listar_comprovantes(id_venda=resultado.id_venda)
+
+    assert len(vendas) == 1
+    assert vendas[0]["id"] == resultado.id_venda
+    assert vendas[0]["forma_pagamento"] == "PIX"
+
+
+def test_lista_comprovantes_filtra_por_periodo_e_pagamento(
+    caixa, carrinho, coca, bala
+):
+    resultado = _vender(caixa, carrinho, coca, bala, forma="PIX")
+    with conexao() as conn:
+        conn.execute(
+            "UPDATE vendas SET data = ? WHERE id = ?",
+            ("2026-10-05 15:00:00", resultado.id_venda),
+        )
+
+    periodo = Periodo(date(2026, 10, 1), date(2026, 10, 7))
+    vendas = listar_comprovantes(
+        inicio=periodo.inicio,
+        fim=periodo.fim,
+        forma_pagamento="PIX",
+    )
+
+    assert len(vendas) == 1
+    assert vendas[0]["id"] == resultado.id_venda
+
+
+def test_lista_comprovantes_recusa_periodo_invertido():
+    with pytest.raises(ErroPDV, match="data inicial"):
+        listar_comprovantes(
+            inicio=date(2026, 10, 8),
+            fim=date(2026, 10, 1),
+        )

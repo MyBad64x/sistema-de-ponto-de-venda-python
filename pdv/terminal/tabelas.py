@@ -86,6 +86,26 @@ def mostrar_compras(compras):
     print("=" * largura)
 
 
+def mostrar_comprovantes(comprovantes):
+    if not comprovantes:
+        print("\nNenhum comprovante encontrado.")
+        return
+
+    largura = 73
+    print("\n" + "=" * largura)
+    print(f"{'VENDA':<10}| {'DATA':<17}| {'TOTAL':>15}| PAGAMENTO")
+    print("=" * largura)
+
+    for comprovante in comprovantes:
+        print(
+            f"{comprovante['id']:<10}| {comprovante['data']:<17}| "
+            f"{dinheiro(comprovante['valor_total']):>15}| "
+            f"{comprovante['forma_pagamento']}"
+        )
+
+    print("=" * largura)
+
+
 def mostrar_carrinho(itens, total):
     if not itens:
         print("\nCarrinho vazio.")

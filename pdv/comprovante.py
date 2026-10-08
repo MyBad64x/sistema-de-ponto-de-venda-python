@@ -1,15 +1,16 @@
-"""Comprovante de venda: cupom em texto, salvo em arquivo e pronto para imprimir.
+"""Comprovante não fiscal de venda, exibido no terminal e salvo em arquivo.
 
 Não é documento fiscal. O texto é montado por uma função pura (montar_texto),
 que só recebe dados; buscar_venda lê do banco e salvar_comprovante grava o arquivo.
-Os comprovantes ficam em database/comprovantes/, ao lado do loja.db.
+O comprovante também pode ser consultado pelo menu de vendas, usando os dados do banco.
+Os arquivos ficam em database/comprovantes/, ao lado do loja.db.
 """
 
 from pdv import NOME_SISTEMA
 from pdv.banco import caminho_banco, conexao
 from pdv.erros import ErroPDV
 
-LARGURA = 40  # colunas de uma impressora térmica comum
+LARGURA = 40
 
 
 def pasta_comprovantes():
@@ -54,6 +55,46 @@ def buscar_venda(id_venda):
         """, (id_venda,)).fetchall()
 
     return dict(venda), [dict(item) for item in itens]
+
+
+def listar_comprovantes(id_venda=None, inicio=None, fim=None, forma_pagamento=None, limite=50):
+    """Lista vendas para consulta de comprovantes, sem depender dos arquivos TXT."""
+    if id_venda is not None and id_venda <= 0:
+        raise ErroPDV("O número da venda deve ser maior que zero.")
+    if inicio and fim and inicio > fim:
+        raise ErroPDV("A data inicial não pode ser depois da data final.")
+    if limite <= 0:
+        raise ErroPDV("O limite de resultados deve ser maior que zero.")
+
+    consulta = """
+        SELECT
+            id,
+            strftime('%d/%m/%Y %H:%M', data, 'localtime') AS data,
+            valor_total,
+            forma_pagamento
+        FROM vendas
+        WHERE 1 = 1
+    """
+    parametros = []
+
+    if id_venda is not None:
+        consulta += " AND id = ?"
+        parametros.append(id_venda)
+    if inicio:
+        consulta += " AND date(data, 'localtime') >= ?"
+        parametros.append(inicio.isoformat())
+    if fim:
+        consulta += " AND date(data, 'localtime') <= ?"
+        parametros.append(fim.isoformat())
+    if forma_pagamento:
+        consulta += " AND forma_pagamento = ?"
+        parametros.append(forma_pagamento)
+
+    consulta += " ORDER BY data DESC, id DESC LIMIT ?"
+    parametros.append(limite)
+
+    with conexao() as conn:
+        return conn.execute(consulta, parametros).fetchall()
 
 
 def montar_texto(venda, itens, largura=LARGURA):

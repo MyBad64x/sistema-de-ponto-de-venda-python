@@ -23,7 +23,11 @@ from pdv.caixa import (
     resumo_caixa_aberto,
 )
 from pdv.carrinho import Carrinho
-from pdv.comprovante import gerar_comprovante, salvar_comprovante
+from pdv.comprovante import (
+    gerar_comprovante,
+    listar_comprovantes,
+    salvar_comprovante,
+)
 from pdv.erros import ErroPDV, EstoqueInsuficiente
 from pdv.gestao import (
     listar_compras,
@@ -60,6 +64,7 @@ from pdv.terminal.tabelas import (
     mostrar_backups,
     mostrar_carrinho,
     mostrar_compras,
+    mostrar_comprovantes,
     mostrar_historico_caixas,
     mostrar_movimentacoes,
     mostrar_produtos,
@@ -269,6 +274,7 @@ def menu_vendas():
         ("3", "Finalizar venda", finalizar),
         ("4", "Limpar carrinho", limpar),
         ("5", "Remover item do carrinho", remover_do_carrinho),
+        ("6", "Consultar comprovantes", consultar_comprovantes),
     ])
 
 
@@ -511,6 +517,43 @@ def _mostrar_comprovante(id_venda):
         print(f"Não foi possível salvar o comprovante: {erro}")
     else:
         print(f"Comprovante salvo em: {caminho}")
+
+
+def consultar_comprovantes():
+    texto_id = ler_texto("\nNúmero da venda (ENTER para ignorar): ", obrigatorio=False)
+    id_venda = None
+    if texto_id:
+        try:
+            id_venda = int(texto_id)
+        except ValueError as erro:
+            raise ErroPDV("O número da venda deve ser um inteiro.") from erro
+
+    inicio = _ler_data_opcional("Data inicial (dd/mm/aaaa, ENTER para ignorar): ")
+    fim = _ler_data_opcional("Data final (dd/mm/aaaa, ENTER para ignorar): ")
+    formas = ("Todas", *FORMAS_PAGAMENTO)
+    forma = escolher("Forma de pagamento: ", formas)
+    if forma == "Todas":
+        forma = None
+
+    comprovantes = listar_comprovantes(
+        id_venda=id_venda,
+        inicio=inicio,
+        fim=fim,
+        forma_pagamento=forma,
+    )
+    mostrar_comprovantes(comprovantes)
+    if not comprovantes:
+        return
+
+    id_selecionado = ler_inteiro(
+        "Número da venda para abrir (0 para voltar): ", minimo=0, padrao=0
+    )
+    if id_selecionado == 0:
+        return
+    if not any(item["id"] == id_selecionado for item in comprovantes):
+        raise ErroPDV("Escolha uma venda exibida na lista.")
+
+    print("\n" + gerar_comprovante(id_selecionado))
 
 
 def _pedir_valor_recebido(total):
