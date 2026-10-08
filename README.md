@@ -29,7 +29,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Leitura de código adiciona uma unidade; é possível desfazer a última leitura
 - Finalização de venda com escolha da forma de pagamento e troco no pagamento em dinheiro
 - Aviso de estoque insuficiente, com opção de vender mesmo assim
-- Comprovante em texto ao finalizar a venda, salvo em arquivo e pronto para imprimir
+- Comprovante não fiscal em texto, salvo em arquivo e consultável pelo menu de vendas
 
 **Caixa**
 - Abertura, sangria, suprimento, status, fechamento com conferência do dinheiro e histórico de caixas
@@ -140,7 +140,6 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 ## Próximas funcionalidades
 
 - Registro de despesas operacionais, como energia, e taxas de pagamento, se solicitado.
-- Impressão de comprovantes
 - Interface gráfica
 
 ## Autor
