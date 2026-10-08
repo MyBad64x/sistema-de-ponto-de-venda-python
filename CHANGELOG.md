@@ -42,6 +42,11 @@ z= correção de bugs no projeto
 - Relatório de lucro bruto realizado por período e potencial do estoque atual; produtos sem custo conhecido são destacados e excluídos dos totais calculáveis.
 - Produtos antigos sem data de cadastro permanecem com a data desconhecida, sem atribuição retroativa.
 
+### Consulta de comprovantes
+
+- Busca de comprovantes não fiscais por número da venda, período e forma de pagamento no menu de vendas.
+- O conteúdo é reconstruído com os dados do banco, sem depender do arquivo TXT e sem impressão física.
+
 ## [1.10.0] - 2026-10-01
 
 ### Adicionado

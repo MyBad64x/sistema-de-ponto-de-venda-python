@@ -5,6 +5,7 @@ from pdv.carrinho import Carrinho
 from pdv.estoque import definir_custo_inicial, registrar_compra
 from pdv.erros import ErroPDV
 from pdv.produtos import buscar_produto, cadastrar_produto, editar_produto
+from pdv.vendas import finalizar_venda
 
 
 def _digitar(monkeypatch, *respostas):
@@ -152,3 +153,30 @@ def test_consulta_gerencial_exibe_custo_e_margem(monkeypatch, coca, capsys):
     assert "CUSTO" in saida
     assert "MARGEM" in saida
     assert "R$ 8,00" in saida
+
+
+def test_consultar_comprovante_no_menu_nao_depende_do_txt(
+    monkeypatch, caixa, carrinho, coca, capsys
+):
+    carrinho.adicionar(coca, 1)
+    venda = finalizar_venda(carrinho, "PIX")
+    _digitar(monkeypatch, "", "", "", "1", str(venda.id_venda))
+
+    menu.consultar_comprovantes()
+
+    saida = capsys.readouterr().out
+    assert f"Venda #{venda.id_venda}" in saida
+    assert "PIX" in saida
+
+
+def test_submenu_de_vendas_disponibiliza_consulta_para_todos_os_perfis(monkeypatch):
+    opcoes = []
+    monkeypatch.setattr(
+        menu,
+        "executar_menu",
+        lambda _titulo, opcoes_menu: opcoes.extend(opcoes_menu),
+    )
+
+    menu.menu_vendas()
+
+    assert any(descricao == "Consultar comprovantes" for _, descricao, _ in opcoes)
