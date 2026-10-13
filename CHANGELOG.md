@@ -50,6 +50,8 @@ z= correção de bugs no projeto
 ### Interface desktop
 
 - Início da interface experimental em PySide6 com login, criação do primeiro usuário dono e janela base.
+- Tela de venda com leitura/busca, carrinho, reversão da última leitura, pagamentos e comprovantes.
+- Consulta desktop de comprovantes por venda, período e forma de pagamento.
 - A interface de terminal permanece como ponto de entrada principal enquanto os fluxos são migrados.
 
 ## [1.10.0] - 2026-10-01

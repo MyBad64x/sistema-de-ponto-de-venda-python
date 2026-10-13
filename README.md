@@ -41,7 +41,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 **Geral**
 - Banco de dados SQLite criado automaticamente
 - Interface em terminal com menus
-- Interface desktop experimental com login e janela inicial
+- Interface desktop experimental com login, venda e consulta de comprovantes
 - Testes automáticos
 - Backup automático ao fechar o caixa, backup manual e restauração
 - Login de usuários com perfis de acesso
@@ -81,7 +81,9 @@ sistema-de-ponto-de-venda-python/
 │   ├── desktop/             # interface desktop experimental em PySide6
 │   │   ├── app.py           # inicialização da interface desktop
 │   │   ├── login.py         # login e primeiro acesso
-│   │   └── janela_principal.py # janela base após autenticação
+│   │   ├── janela_principal.py # navegação desktop após autenticação
+│   │   ├── vendas_page.py   # venda, carrinho e checkout
+│   │   └── comprovantes_page.py # pesquisa e consulta de comprovantes
 │   │
 │   └── terminal/            # interface de terminal
 │       ├── menu.py          # menus e ações
@@ -93,7 +95,7 @@ sistema-de-ponto-de-venda-python/
 └── database/                # criado automaticamente (fora do Git)
 ```
 
-Os módulos de `pdv/` contêm as **regras de negócio** e não usam `print` nem `input`: recebem dados, validam, gravam no banco e devolvem resultados (ou levantam `ErroPDV` quando algo não é permitido). Toda a conversa com o usuário fica em `pdv/terminal/`. Assim as regras podem ser testadas sozinhas e, no futuro, a interface de terminal pode ser trocada por uma gráfica sem reescrever a lógica.
+Os módulos de `pdv/` contêm as **regras de negócio** e não usam `print` nem `input`: recebem dados, validam, gravam no banco e devolvem resultados (ou levantam `ErroPDV` quando algo não é permitido). A conversa com o usuário fica nas interfaces `pdv/terminal/` e `pdv/desktop/`, que reutilizam esses serviços.
 
 ## Como executar
 
@@ -126,7 +128,7 @@ pip install -r requirements.txt
 python -m pdv.desktop
 ```
 
-Esta primeira etapa inclui login, cadastro do primeiro usuário dono e a janela base. Os fluxos completos continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
+Esta versão inclui login, cadastro do primeiro usuário dono, venda com leitura/busca de produtos, carrinho, checkout e consulta de comprovantes. Estoque, compras, caixa e gestão continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
 
 ## Backups
 
@@ -159,7 +161,7 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 ## Próximas funcionalidades
 
 - Registro de despesas operacionais, como energia, e taxas de pagamento, se solicitado.
-- Interface gráfica
+- Migrar estoque, compras, caixa e gestão para a interface desktop.
 
 ## Autor
 
