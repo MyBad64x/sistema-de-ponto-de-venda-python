@@ -26,7 +26,7 @@ class ComprovantesPage(QWidget):
         super().__init__(parent)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
+        layout.setContentsMargins(24, 22, 24, 22)
         layout.setSpacing(14)
 
         titulo = QLabel("Comprovantes não fiscais")
@@ -36,12 +36,16 @@ class ComprovantesPage(QWidget):
         filtros = QHBoxLayout()
         self.id_input = QLineEdit()
         self.id_input.setObjectName("numeroVendaFiltro")
+        self.id_input.setMinimumWidth(120)
         self.id_input.setPlaceholderText("Número da venda")
         self.inicio_input = QLineEdit()
+        self.inicio_input.setMinimumWidth(140)
         self.inicio_input.setPlaceholderText("Data inicial (dd/mm/aaaa)")
         self.fim_input = QLineEdit()
+        self.fim_input.setMinimumWidth(140)
         self.fim_input.setPlaceholderText("Data final (dd/mm/aaaa)")
         self.pagamento_input = QComboBox()
+        self.pagamento_input.setMinimumWidth(150)
         self.pagamento_input.addItem("Todas as formas", None)
         for forma in FORMAS_PAGAMENTO:
             self.pagamento_input.addItem(forma, forma)
@@ -86,15 +90,27 @@ class ComprovantesPage(QWidget):
             QLineEdit, QComboBox {
                 min-height: 36px;
                 padding: 0 8px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;
             }
             QTableWidget#resultadosComprovantes {
+                color: #20352e;
                 background: white;
                 alternate-background-color: #f0f4f1;
                 border: 1px solid #d5dfda;
                 gridline-color: #e1e8e4;
+            }
+            QHeaderView::section {
+                min-height: 30px;
+                padding: 0 8px;
+                color: #20352e;
+                background: #e8efeb;
+                border: 0;
+                border-bottom: 1px solid #bdcbc5;
             }
             QPushButton {
                 min-height: 38px;

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication
 from pdv.banco import criar_tabelas
 from pdv.desktop.janela_principal import MainWindow
 from pdv.desktop.login import LoginDialog
+from pdv.desktop.tema import aplicar_tema
 
 
 def main():
@@ -14,6 +15,7 @@ def main():
     aplicacao = QApplication(sys.argv)
     aplicacao.setApplicationName("PDV Python")
     aplicacao.setStyle("Fusion")
+    aplicar_tema(aplicacao)
 
     login = LoginDialog()
     if login.exec() != LoginDialog.DialogCode.Accepted:

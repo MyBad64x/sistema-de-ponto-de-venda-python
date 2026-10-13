@@ -51,7 +51,7 @@ class VendaPage(QWidget):
         self.carrinho = Carrinho()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
+        layout.setContentsMargins(24, 22, 24, 22)
         layout.setSpacing(14)
 
         titulo = QLabel("Venda")
@@ -71,16 +71,24 @@ class VendaPage(QWidget):
         self.produto_input.returnPressed.connect(self.adicionar_entrada)
         layout.addWidget(self.produto_input)
 
-        self.itens_tabela = QTableWidget(0, 5)
+        self.itens_tabela = QTableWidget(0, 4)
         self.itens_tabela.setObjectName("itensVenda")
         self.itens_tabela.setHorizontalHeaderLabels(
-            ["Produto", "Quantidade", "Preço unitário", "Subtotal", ""]
+            ["Produto", "Quantidade", "Preço unitário", "Subtotal"]
         )
         self.itens_tabela.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.itens_tabela.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.itens_tabela.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.itens_tabela.horizontalHeader().setStretchLastSection(True)
         self.itens_tabela.horizontalHeader().setSectionResizeMode(0, self.itens_tabela.horizontalHeader().ResizeMode.Stretch)
+        for coluna in range(1, 4):
+            self.itens_tabela.horizontalHeader().setSectionResizeMode(
+                coluna,
+                self.itens_tabela.horizontalHeader().ResizeMode.ResizeToContents,
+            )
+        for coluna in range(1, 4):
+            self.itens_tabela.horizontalHeaderItem(coluna).setTextAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
         layout.addWidget(self.itens_tabela, 1)
 
         acoes = QHBoxLayout()
@@ -115,6 +123,9 @@ class VendaPage(QWidget):
             QLabel#instrucoesVenda, QLabel#statusVenda { color: #53655f; }
             QLineEdit#produtoInput {
                 padding: 0 12px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;
@@ -122,10 +133,19 @@ class VendaPage(QWidget):
             }
             QLineEdit#produtoInput:focus { border: 2px solid #24735d; }
             QTableWidget#itensVenda {
+                color: #20352e;
                 background: white;
                 alternate-background-color: #f0f4f1;
                 border: 1px solid #d5dfda;
                 gridline-color: #e1e8e4;
+            }
+            QHeaderView::section {
+                min-height: 30px;
+                padding: 0 8px;
+                color: #20352e;
+                background: #e8efeb;
+                border: 0;
+                border-bottom: 1px solid #bdcbc5;
             }
             QLabel#totalVenda { color: #173c35; font-size: 22px; font-weight: 700; }
             QPushButton {
@@ -217,7 +237,10 @@ class VendaPage(QWidget):
             self.itens_tabela.setItem(linha, 1, QTableWidgetItem(str(item.quantidade)))
             self.itens_tabela.setItem(linha, 2, QTableWidgetItem(dinheiro(item.preco_unitario)))
             self.itens_tabela.setItem(linha, 3, QTableWidgetItem(dinheiro(item.subtotal)))
-            self.itens_tabela.setItem(linha, 4, QTableWidgetItem(""))
+            for coluna in range(1, 4):
+                self.itens_tabela.item(linha, coluna).setTextAlignment(
+                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                )
 
         self.total_label.setText(f"Total: {dinheiro(self.carrinho.total())}")
         self.finalizar_button.setEnabled(not self.carrinho.esta_vazio())
