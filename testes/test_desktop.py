@@ -4,10 +4,15 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QLineEdit
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit
 
+from pdv.banco import conexao
+from pdv.comprovante import gerar_comprovante
+from pdv.desktop.comprovantes_page import ComprovantesPage
 from pdv.desktop.janela_principal import MainWindow
 from pdv.desktop.login import LoginDialog
+from pdv.desktop.vendas_page import ComprovanteDialog, VendaPage
+from pdv.produtos import editar_produto
 from pdv.usuarios import criar_usuario
 
 
@@ -63,3 +68,119 @@ def test_janela_exibe_identidade_e_perfil_do_usuario(qapp, qtbot):
 
     assert janela.windowTitle() == "PDV Python"
     assert janela.usuario["perfil"] == "dono"
+    assert janela.paginas.tabText(0) == "Venda"
+    assert janela.paginas.tabText(1) == "Comprovantes"
+
+
+def test_leitura_de_codigo_adiciona_unidade_e_desfazer_remove(
+    qapp, qtbot, caixa, coca
+):
+    editar_produto(coca, "Coca-Cola 2L", 12.5, "00123")
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    pagina.produto_input.setText("00123")
+
+    qtbot.keyClick(pagina.produto_input, Qt.Key.Key_Return)
+
+    assert pagina.carrinho.itens == {coca: 1}
+    assert pagina.total_label.text() == "Total: R$ 12,50"
+    assert pagina.itens_tabela.item(0, 0).text() == "Coca-Cola 2L"
+    assert "custo" not in " ".join(
+        pagina.itens_tabela.horizontalHeaderItem(coluna).text().lower()
+        for coluna in range(pagina.itens_tabela.columnCount())
+    )
+
+    pagina.desfazer_ultima_leitura()
+
+    assert pagina.carrinho.esta_vazio()
+    assert not pagina.finalizar_button.isEnabled()
+
+
+def test_busca_manual_por_nome_adiciona_unidade(qapp, qtbot, caixa, bala):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    pagina.produto_input.setText("Bala")
+
+    qtbot.keyClick(pagina.produto_input, Qt.Key.Key_Return)
+
+    assert pagina.carrinho.itens == {bala: 1}
+
+
+def test_finaliza_venda_pix_e_guarda_comprovante(qapp, qtbot, caixa, coca, monkeypatch):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    pagina.carrinho.adicionar(coca, 1)
+    pagina._atualizar_carrinho()
+    monkeypatch.setattr(
+        "pdv.desktop.vendas_page.QInputDialog.getItem",
+        lambda *args, **kwargs: ("PIX", True),
+    )
+    monkeypatch.setattr(
+        ComprovanteDialog,
+        "exec",
+        lambda self: QDialog.DialogCode.Accepted,
+    )
+
+    pagina.finalizar()
+
+    assert pagina.carrinho.esta_vazio()
+    with conexao() as conn:
+        venda = conn.execute("SELECT * FROM vendas").fetchone()
+    assert venda["forma_pagamento"] == "PIX"
+    assert f"Venda #{venda['id']}" in gerar_comprovante(venda["id"])
+
+
+def test_finaliza_pagamento_em_dinheiro_com_troco(
+    qapp, qtbot, caixa, coca, monkeypatch
+):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    pagina.carrinho.adicionar(coca, 1)
+    pagina._atualizar_carrinho()
+    monkeypatch.setattr(
+        "pdv.desktop.vendas_page.QInputDialog.getItem",
+        lambda *args, **kwargs: ("Dinheiro", True),
+    )
+    monkeypatch.setattr(
+        "pdv.desktop.vendas_page.QInputDialog.getDouble",
+        lambda *args, **kwargs: (20, True),
+    )
+    monkeypatch.setattr(
+        ComprovanteDialog,
+        "exec",
+        lambda self: QDialog.DialogCode.Accepted,
+    )
+
+    pagina.finalizar()
+
+    with conexao() as conn:
+        venda = conn.execute("SELECT * FROM vendas").fetchone()
+    assert (venda["valor_recebido"], venda["troco"]) == (20, 7.5)
+
+
+def test_consulta_desktop_filtra_e_abre_comprovante(qapp, qtbot, caixa, coca, monkeypatch):
+    pagina_venda = VendaPage()
+    qtbot.addWidget(pagina_venda)
+    pagina_venda.carrinho.adicionar(coca, 1)
+    from pdv.vendas import finalizar_venda
+
+    resultado = finalizar_venda(pagina_venda.carrinho, "PIX")
+    pagina = ComprovantesPage()
+    qtbot.addWidget(pagina)
+    pagina.id_input.setText(str(resultado.id_venda))
+    pagina.pesquisar()
+
+    assert pagina.resultados_tabela.rowCount() == 1
+    assert pagina.resultados_tabela.item(0, 0).text() == str(resultado.id_venda)
+
+    textos = []
+    monkeypatch.setattr(
+        ComprovanteDialog,
+        "exec",
+        lambda self: textos.append(self.texto) or QDialog.DialogCode.Accepted,
+    )
+    pagina.resultados_tabela.selectRow(0)
+    pagina._abrir_selecionado()
+
+    assert len(textos) == 1
+    assert f"Venda #{resultado.id_venda}" in textos[0]
