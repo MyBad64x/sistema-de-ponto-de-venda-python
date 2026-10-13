@@ -52,6 +52,9 @@ z= correção de bugs no projeto
 - Início da interface experimental em PySide6 com login, criação do primeiro usuário dono e janela base.
 - Tela de venda com leitura/busca, carrinho, reversão da última leitura, pagamentos e comprovantes.
 - Consulta desktop de comprovantes por venda, período e forma de pagamento.
+- Aba de estoque disponível somente para a dona, com filtros, ordenação, simulação de preço, reposição e contagem.
+- Reposição atualiza o custo médio após confirmação; contagem aplica diferenças em lote e só para produtos lidos.
+- Histórico de compras pesquisável por fornecedor, referência e período na interface desktop.
 - A interface de terminal permanece como ponto de entrada principal enquanto os fluxos são migrados.
 
 ## [1.10.0] - 2026-10-01

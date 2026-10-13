@@ -70,6 +70,17 @@ def test_janela_exibe_identidade_e_perfil_do_usuario(qapp, qtbot):
     assert janela.usuario["perfil"] == "dono"
     assert janela.paginas.tabText(0) == "Venda"
     assert janela.paginas.tabText(1) == "Comprovantes"
+    assert janela.paginas.tabText(2) == "Estoque"
+
+
+def test_janela_do_operador_nao_exibe_aba_de_estoque(qapp, qtbot):
+    janela = MainWindow({"id": 2, "nome": "Funcionário", "perfil": "operador"})
+    qtbot.addWidget(janela)
+
+    assert janela.paginas.count() == 2
+    assert [janela.paginas.tabText(indice) for indice in range(2)] == [
+        "Venda", "Comprovantes"
+    ]
 
 
 def test_leitura_de_codigo_adiciona_unidade_e_desfazer_remove(
