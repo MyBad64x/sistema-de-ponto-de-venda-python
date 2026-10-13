@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from pdv.desktop.comprovantes_page import ComprovantesPage
+from pdv.desktop.estoque_page import EstoquePage
 from pdv.desktop.vendas_page import VendaPage
 
 
@@ -56,6 +57,8 @@ class MainWindow(QMainWindow):
         self.paginas.setObjectName("paginasPDV")
         self.paginas.addTab(VendaPage(), "Venda")
         self.paginas.addTab(ComprovantesPage(), "Comprovantes")
+        if usuario["perfil"] == "dono":
+            self.paginas.addTab(EstoquePage(), "Estoque")
         layout.addWidget(barra_superior)
         layout.addWidget(self.paginas, 1)
 
