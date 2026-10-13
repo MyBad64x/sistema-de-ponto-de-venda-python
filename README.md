@@ -23,6 +23,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 - Contagem de estoque por leitura e ajuste manual de inventário, perdas e quebras
 - Histórico de todas as movimentações (entradas, ajustes e vendas)
 - Área da dona para consultar compras, filtrar estoque e simular preços com custo e lucro bruto
+- Na interface desktop, reposição, contagem, histórico de compras e custos ficam visíveis somente para a dona
 
 **Vendas**
 - Carrinho de compras (adicionar, remover, limpar)
@@ -41,7 +42,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 **Geral**
 - Banco de dados SQLite criado automaticamente
 - Interface em terminal com menus
-- Interface desktop experimental com login, venda e consulta de comprovantes
+- Interface desktop experimental com login, venda, comprovantes e gestão de estoque da dona
 - Testes automáticos
 - Backup automático ao fechar o caixa, backup manual e restauração
 - Login de usuários com perfis de acesso
@@ -83,6 +84,7 @@ sistema-de-ponto-de-venda-python/
 │   │   ├── login.py         # login e primeiro acesso
 │   │   ├── janela_principal.py # navegação desktop após autenticação
 │   │   ├── vendas_page.py   # venda, carrinho e checkout
+│   │   ├── estoque_page.py  # produtos, compras, contagem e precificação
 │   │   └── comprovantes_page.py # pesquisa e consulta de comprovantes
 │   │
 │   └── terminal/            # interface de terminal
@@ -128,7 +130,7 @@ pip install -r requirements.txt
 python -m pdv.desktop
 ```
 
-Esta versão inclui login, cadastro do primeiro usuário dono, venda com leitura/busca de produtos, carrinho, checkout e consulta de comprovantes. Estoque, compras, caixa e gestão continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
+Esta versão inclui login, venda com leitura/busca de produtos, carrinho, checkout e consulta de comprovantes. A aba de estoque, disponível somente para a dona, inclui catálogo gerencial, precificação, reposição, contagem e histórico de compras. Caixa e gestão de relatórios continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
 
 ## Backups
 
