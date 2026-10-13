@@ -4,6 +4,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit
 
 from pdv.banco import conexao
@@ -12,13 +13,16 @@ from pdv.desktop.comprovantes_page import ComprovantesPage
 from pdv.desktop.janela_principal import MainWindow
 from pdv.desktop.login import LoginDialog
 from pdv.desktop.vendas_page import ComprovanteDialog, VendaPage
+from pdv.desktop.tema import CORES, aplicar_tema
 from pdv.produtos import editar_produto
 from pdv.usuarios import criar_usuario
 
 
 @pytest.fixture(scope="session")
 def qapp():
-    return QApplication.instance() or QApplication([])
+    aplicacao = QApplication.instance() or QApplication([])
+    aplicar_tema(aplicacao)
+    return aplicacao
 
 
 def test_primeiro_acesso_cria_usuario_dono_com_senha_confirmada(qapp, qtbot):
@@ -81,6 +85,26 @@ def test_janela_do_operador_nao_exibe_aba_de_estoque(qapp, qtbot):
     assert [janela.paginas.tabText(indice) for indice in range(2)] == [
         "Venda", "Comprovantes"
     ]
+
+
+def test_tema_define_texto_legivel_em_campos_e_placeholders(qapp):
+    paleta = qapp.palette()
+
+    assert paleta.color(QPalette.ColorRole.Text).name() == CORES["texto"]
+    assert paleta.color(QPalette.ColorRole.PlaceholderText).name() == CORES[
+        "texto_placeholder"
+    ]
+    assert paleta.color(QPalette.ColorRole.Base).name() == CORES["superficie"]
+
+
+def test_tabela_de_venda_nao_tem_coluna_vazia_e_numero_e_alinhado(qapp, qtbot):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+
+    assert pagina.itens_tabela.columnCount() == 4
+    header = pagina.itens_tabela.horizontalHeader()
+    assert header.sectionResizeMode(0) == header.ResizeMode.Stretch
+    assert header.sectionResizeMode(1) == header.ResizeMode.ResizeToContents
 
 
 def test_leitura_de_codigo_adiciona_unidade_e_desfazer_remove(

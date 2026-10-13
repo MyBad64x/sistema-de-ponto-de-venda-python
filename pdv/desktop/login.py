@@ -89,6 +89,9 @@ class LoginDialog(QDialog):
             QLineEdit {
                 min-height: 34px;
                 padding: 0 9px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;

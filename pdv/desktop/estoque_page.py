@@ -112,6 +112,9 @@ class PrecificacaoDialog(QDialog):
             QDoubleSpinBox {
                 min-height: 34px;
                 padding: 0 8px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;
@@ -209,7 +212,11 @@ class ProdutosEstoquePage(QWidget):
         self.produtos_tabela.horizontalHeader().setSectionResizeMode(
             0, self.produtos_tabela.horizontalHeader().ResizeMode.Stretch
         )
-        self.produtos_tabela.horizontalHeader().setStretchLastSection(True)
+        for coluna in range(1, 7):
+            self.produtos_tabela.horizontalHeader().setSectionResizeMode(
+                coluna,
+                self.produtos_tabela.horizontalHeader().ResizeMode.ResizeToContents,
+            )
         layout.addWidget(self.produtos_tabela, 1)
 
         acoes = QHBoxLayout()
@@ -226,15 +233,25 @@ class ProdutosEstoquePage(QWidget):
             QComboBox {
                 min-height: 36px;
                 padding: 0 8px;
+                color: #20352e;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;
             }
             QTableWidget#produtosEstoque {
+                color: #20352e;
                 background: white;
                 alternate-background-color: #f0f4f1;
                 border: 1px solid #d5dfda;
                 gridline-color: #e1e8e4;
+            }
+            QHeaderView::section {
+                min-height: 30px;
+                padding: 0 8px;
+                color: #20352e;
+                background: #e8efeb;
+                border: 0;
+                border-bottom: 1px solid #bdcbc5;
             }
             QPushButton {
                 min-height: 38px;
@@ -354,10 +371,14 @@ class CompraPage(QWidget):
             ["Produto", "Unidades recebidas", "Custo unitário", "Total do item"]
         )
         self.itens_tabela.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.itens_tabela.horizontalHeader().setStretchLastSection(True)
         self.itens_tabela.horizontalHeader().setSectionResizeMode(
             0, self.itens_tabela.horizontalHeader().ResizeMode.Stretch
         )
+        for coluna in range(1, 4):
+            self.itens_tabela.horizontalHeader().setSectionResizeMode(
+                coluna,
+                self.itens_tabela.horizontalHeader().ResizeMode.ResizeToContents,
+            )
         layout.addWidget(self.itens_tabela, 1)
 
         acoes = QHBoxLayout()
@@ -379,15 +400,27 @@ class CompraPage(QWidget):
             QLineEdit {
                 min-height: 34px;
                 padding: 0 9px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;
             }
             QTableWidget#itensCompra {
+                color: #20352e;
                 background: white;
                 alternate-background-color: #f0f4f1;
                 border: 1px solid #d5dfda;
                 gridline-color: #e1e8e4;
+            }
+            QHeaderView::section {
+                min-height: 30px;
+                padding: 0 8px;
+                color: #20352e;
+                background: #e8efeb;
+                border: 0;
+                border-bottom: 1px solid #bdcbc5;
             }
             QPushButton {
                 min-height: 38px;
@@ -546,10 +579,14 @@ class ContagemPage(QWidget):
             ["Produto", "Contado", "No sistema"]
         )
         self.contagens_tabela.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.contagens_tabela.horizontalHeader().setStretchLastSection(True)
         self.contagens_tabela.horizontalHeader().setSectionResizeMode(
             0, self.contagens_tabela.horizontalHeader().ResizeMode.Stretch
         )
+        for coluna in (1, 2):
+            self.contagens_tabela.horizontalHeader().setSectionResizeMode(
+                coluna,
+                self.contagens_tabela.horizontalHeader().ResizeMode.ResizeToContents,
+            )
         layout.addWidget(self.contagens_tabela, 1)
 
         acoes = QHBoxLayout()
@@ -571,15 +608,27 @@ class ContagemPage(QWidget):
             QLineEdit {
                 min-height: 40px;
                 padding: 0 10px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
                 border: 1px solid #bdcbc5;
                 border-radius: 4px;
                 background: white;
             }
             QTableWidget#contagensEstoque {
+                color: #20352e;
                 background: white;
                 alternate-background-color: #f0f4f1;
                 border: 1px solid #d5dfda;
                 gridline-color: #e1e8e4;
+            }
+            QHeaderView::section {
+                min-height: 30px;
+                padding: 0 8px;
+                color: #20352e;
+                background: #e8efeb;
+                border: 0;
+                border-bottom: 1px solid #bdcbc5;
             }
             QPushButton {
                 min-height: 38px;
@@ -723,10 +772,41 @@ class HistoricoComprasPage(QWidget):
             ["Data", "Fornecedor", "Referência", "Produto", "Quantidade", "Custo/un.", "Total"]
         )
         self.compras_tabela.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.compras_tabela.horizontalHeader().setStretchLastSection(True)
         self.compras_tabela.horizontalHeader().setSectionResizeMode(
             3, self.compras_tabela.horizontalHeader().ResizeMode.Stretch
         )
+        for coluna in (0, 1, 2, 4, 5, 6):
+            self.compras_tabela.horizontalHeader().setSectionResizeMode(
+                coluna,
+                self.compras_tabela.horizontalHeader().ResizeMode.ResizeToContents,
+            )
+        self.compras_tabela.setStyleSheet("""
+            QLineEdit {
+                min-height: 36px;
+                padding: 0 8px;
+                color: #20352e;
+                selection-background-color: #17634f;
+                selection-color: #ffffff;
+                border: 1px solid #bdcbc5;
+                border-radius: 4px;
+                background: white;
+            }
+            QTableWidget#comprasEstoque {
+                color: #20352e;
+                background: white;
+                alternate-background-color: #f0f4f1;
+                border: 1px solid #d5dfda;
+                gridline-color: #e1e8e4;
+            }
+            QHeaderView::section {
+                min-height: 30px;
+                padding: 0 8px;
+                color: #20352e;
+                background: #e8efeb;
+                border: 0;
+                border-bottom: 1px solid #bdcbc5;
+            }
+        """)
         layout.addWidget(self.compras_tabela, 1)
         self.pesquisar()
 
