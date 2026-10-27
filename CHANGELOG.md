@@ -11,7 +11,7 @@ z= correção de bugs no projeto
 
 ---
 
-## Em desenvolvimento
+  ## [1.11.0] - 2026-10-27
 
 ### Preparação
 
@@ -56,6 +56,12 @@ z= correção de bugs no projeto
 - Reposição atualiza o custo médio após confirmação; contagem aplica diferenças em lote e só para produtos lidos.
 - Histórico de compras pesquisável por fornecedor, referência e período na interface desktop.
 - A interface de terminal permanece como ponto de entrada principal enquanto os fluxos são migrados.
+
+### Alterado
+
+- Versão mínima do Python passou a ser a 3.11 (a 3.10 deixa de ter suporte em outubro de 2026). Os testes automáticos rodam no Python 3.11 e 3.14.
+
+---
 
 ## [1.10.0] - 2026-10-01
 
