@@ -49,7 +49,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 ## Tecnologias utilizadas
 
-- Python 3.10+
+- Python 3.11+
 - SQLite / SQL
 - PySide6 (interface desktop experimental)
 - pytest (testes automáticos)
@@ -147,7 +147,7 @@ python -m pytest
 
 Os testes usam um banco temporário e não mexem no `database/loja.db`.
 
-Os testes também rodam automaticamente no GitHub a cada pull request e a cada merge na `main`, no Linux e no Windows, com Python 3.10 e 3.14.
+Os testes também rodam automaticamente no GitHub a cada pull request e a cada merge na `main`, no Linux e no Windows, com Python 3.11 e 3.14.
 
 ## Objetivos do projeto
 
