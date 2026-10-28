@@ -11,7 +11,23 @@ z= correção de bugs no projeto
 
 ---
 
-  ## [1.11.0] - 2026-10-27
+## [1.12.0] - 2026-10-28
+
+### Interface desktop
+
+- Nova aba Caixa, disponível para a dona e para o operador: abrir caixa, sangria, suprimento e fechamento com conferência do dinheiro contado.
+- Resumo do caixa aberto com vendas por forma de pagamento e a conta do dinheiro na gaveta.
+- O fechamento mostra sobra ou falta e faz o backup automático; se o backup falhar, o caixa continua fechado e a tela avisa.
+- Histórico dos últimos 20 caixas, com resumo completo de qualquer um deles.
+- O fechamento é bloqueado enquanto houver itens no carrinho da aba Venda.
+
+### Corrigido
+
+- Título da versão 1.11.0 neste arquivo estava com espaços na frente.
+
+---
+
+## [1.11.0] - 2026-10-27
 
 ### Preparação
 

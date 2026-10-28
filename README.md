@@ -34,6 +34,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 
 **Caixa**
 - Abertura, sangria, suprimento, status, fechamento com conferência do dinheiro e histórico de caixas
+- Na interface desktop, a aba Caixa reúne essas operações para a dona e para o operador
 
 **Relatórios**
 - Resumo de vendas, produtos mais vendidos e vendas por dia, por período
@@ -42,7 +43,7 @@ Este é meu primeiro projeto completo de software, criado com o objetivo de colo
 **Geral**
 - Banco de dados SQLite criado automaticamente
 - Interface em terminal com menus
-- Interface desktop experimental com login, venda, comprovantes e gestão de estoque da dona
+- Interface desktop experimental com login, venda, caixa, comprovantes e gestão de estoque da dona
 - Testes automáticos
 - Backup automático ao fechar o caixa, backup manual e restauração
 - Login de usuários com perfis de acesso
@@ -84,6 +85,7 @@ sistema-de-ponto-de-venda-python/
 │   │   ├── login.py         # login e primeiro acesso
 │   │   ├── janela_principal.py # navegação desktop após autenticação
 │   │   ├── vendas_page.py   # venda, carrinho e checkout
+│   │   ├── caixa_page.py    # abertura, sangria, suprimento, fechamento e histórico do caixa
 │   │   ├── estoque_page.py  # produtos, compras, contagem e precificação
 │   │   └── comprovantes_page.py # pesquisa e consulta de comprovantes
 │   │
@@ -130,7 +132,7 @@ pip install -r requirements.txt
 python -m pdv.desktop
 ```
 
-Esta versão inclui login, venda com leitura/busca de produtos, carrinho, checkout e consulta de comprovantes. A aba de estoque, disponível somente para a dona, inclui catálogo gerencial, precificação, reposição, contagem e histórico de compras. Caixa e gestão de relatórios continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
+Esta versão inclui login, venda com leitura/busca de produtos, carrinho, checkout, caixa (abertura, sangria, suprimento, fechamento com conferência e backup automático, e histórico) e consulta de comprovantes. A aba de estoque, disponível somente para a dona, inclui catálogo gerencial, precificação, reposição, contagem e histórico de compras. Relatórios e backup manual continuam disponíveis pelo terminal com python main.py enquanto são migrados para a interface desktop.
 
 ## Backups
 
@@ -163,7 +165,7 @@ Além de desenvolver um sistema funcional para um pequeno comércio, este projet
 ## Próximas funcionalidades
 
 - Registro de despesas operacionais, como energia, e taxas de pagamento, se solicitado.
-- Migrar estoque, compras, caixa e gestão para a interface desktop.
+- Migrar relatórios, gestão e backup para a interface desktop.
 
 ## Autor
 
