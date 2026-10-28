@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pdv.desktop.caixa_page import CaixaPage
 from pdv.desktop.comprovantes_page import ComprovantesPage
 from pdv.desktop.estoque_page import EstoquePage
 from pdv.desktop.vendas_page import VendaPage
@@ -55,10 +56,14 @@ class MainWindow(QMainWindow):
 
         self.paginas = QTabWidget()
         self.paginas.setObjectName("paginasPDV")
-        self.paginas.addTab(VendaPage(), "Venda")
+        self.venda_page = VendaPage()
+        self.caixa_page = CaixaPage(carrinho_vazio=self.venda_page.carrinho.esta_vazio)
+        self.paginas.addTab(self.venda_page, "Venda")
+        self.paginas.addTab(self.caixa_page, "Caixa")
         self.paginas.addTab(ComprovantesPage(), "Comprovantes")
         if usuario["perfil"] == "dono":
             self.paginas.addTab(EstoquePage(), "Estoque")
+        self.paginas.currentChanged.connect(self._ao_trocar_de_aba)
         layout.addWidget(barra_superior)
         layout.addWidget(self.paginas, 1)
 
@@ -89,3 +94,9 @@ class MainWindow(QMainWindow):
             }
             QTabBar::tab:selected { color: #173c35; background: #ffffff; font-weight: 600; }
         """)
+
+    def _ao_trocar_de_aba(self, indice):
+        """Avisa a aba que ela ficou visível, para ela recarregar os dados."""
+        pagina = self.paginas.widget(indice)
+        if hasattr(pagina, "ao_exibir"):
+            pagina.ao_exibir()
