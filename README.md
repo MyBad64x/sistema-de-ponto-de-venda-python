@@ -132,7 +132,7 @@ pip install -r requirements.txt
 python -m pdv.desktop
 ```
 
-Esta versão inclui login, venda com leitura/busca de produtos, carrinho, checkout, caixa (abertura, sangria, suprimento, fechamento com conferência e backup automático, e histórico) e consulta de comprovantes. A aba de estoque, disponível somente para a dona, inclui catálogo gerencial, precificação, reposição, contagem e histórico de compras. Relatórios e backup manual continuam disponíveis pelo terminal com python main.py enquanto são migrados para a interface desktop.
+Esta versão inclui login, venda com leitura/busca de produtos, carrinho, checkout, caixa (abertura, sangria, suprimento, fechamento com conferência e backup automático, e histórico) e consulta de comprovantes. A aba de estoque, disponível somente para a dona, inclui catálogo gerencial, precificação, reposição, contagem e histórico de compras. Relatórios e backup manual continuam disponíveis pelo terminal com `python main.py` enquanto são migrados para a interface desktop.
 
 ## Backups
 
