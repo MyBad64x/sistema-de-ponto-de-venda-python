@@ -8,6 +8,7 @@ from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit
 
 from pdv.banco import conexao
+from pdv.caixa import abrir_caixa, fechar_caixa
 from pdv.comprovante import gerar_comprovante
 from pdv.desktop.comprovantes_page import ComprovantesPage
 from pdv.desktop.janela_principal import MainWindow
@@ -220,3 +221,90 @@ def test_consulta_desktop_filtra_e_abre_comprovante(qapp, qtbot, caixa, coca, mo
 
     assert len(textos) == 1
     assert f"Venda #{resultado.id_venda}" in textos[0]
+
+
+def _ler_produto(qtbot, pagina, texto):
+    pagina.produto_input.setText(texto)
+    qtbot.keyClick(pagina.produto_input, Qt.Key.Key_Return)
+
+
+def test_venda_sem_caixa_aberto_avisa_e_trava_a_leitura(qapp, qtbot, coca):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+
+    assert not pagina.aviso_caixa_label.isHidden()
+    assert "Caixa fechado" in pagina.aviso_caixa_label.text()
+    assert not pagina.produto_input.isEnabled()
+    assert pagina.produto_input.placeholderText() == "Abra o caixa para registrar vendas"
+    assert not pagina.finalizar_button.isEnabled()
+
+
+def test_venda_com_caixa_aberto_nao_mostra_aviso(qapp, qtbot, caixa, coca):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+
+    _ler_produto(qtbot, pagina, "Coca")
+
+    assert pagina.aviso_caixa_label.isHidden()
+    assert pagina.produto_input.isEnabled()
+    assert pagina.finalizar_button.isEnabled()
+
+
+def test_abrir_o_caixa_libera_a_venda_ao_voltar_para_a_aba(qapp, qtbot, coca):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    assert not pagina.produto_input.isEnabled()
+
+    abrir_caixa(50)
+    pagina.ao_exibir()
+    _ler_produto(qtbot, pagina, "Coca")
+
+    assert pagina.aviso_caixa_label.isHidden()
+    assert pagina.produto_input.isEnabled()
+    assert pagina.finalizar_button.isEnabled()
+
+
+def test_fechar_o_caixa_trava_a_venda_ao_voltar_para_a_aba(qapp, qtbot, caixa, coca):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    _ler_produto(qtbot, pagina, "Coca")
+    assert pagina.finalizar_button.isEnabled()
+
+    fechar_caixa(100)
+    pagina.ao_exibir()
+
+    assert not pagina.aviso_caixa_label.isHidden()
+    assert not pagina.produto_input.isEnabled()
+    assert not pagina.finalizar_button.isEnabled()
+
+
+def test_caixa_fechado_por_fora_e_detectado_ao_finalizar(
+    qapp, qtbot, caixa, coca, monkeypatch
+):
+    pagina = VendaPage()
+    qtbot.addWidget(pagina)
+    _ler_produto(qtbot, pagina, "Coca")
+    monkeypatch.setattr(
+        "pdv.desktop.vendas_page.QInputDialog.getItem",
+        lambda *args, **kwargs: ("PIX", True),
+    )
+    fechar_caixa(100)  # fechado em outro lugar, sem a aba Venda saber
+
+    pagina.finalizar()
+
+    assert "Abra o caixa" in pagina.status_label.text()
+    assert not pagina.aviso_caixa_label.isHidden()
+    assert not pagina.finalizar_button.isEnabled()
+    assert not pagina.carrinho.esta_vazio()  # o carrinho não se perde
+
+
+def test_janela_atualiza_a_aba_venda_ao_voltar_do_caixa(qapp, qtbot, caixa):
+    janela = MainWindow({"id": 1, "nome": "Alberto", "perfil": "dono"})
+    qtbot.addWidget(janela)
+    assert janela.venda_page.aviso_caixa_label.isHidden()
+
+    fechar_caixa(100)
+    janela.paginas.setCurrentIndex(1)
+    janela.paginas.setCurrentIndex(0)
+
+    assert not janela.venda_page.aviso_caixa_label.isHidden()
