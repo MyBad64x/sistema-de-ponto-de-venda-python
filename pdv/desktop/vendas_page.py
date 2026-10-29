@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from pdv.caixa import DINHEIRO
+from pdv.caixa import DINHEIRO, caixa_aberto
 from pdv.carrinho import Carrinho
 from pdv.comprovante import gerar_comprovante, salvar_comprovante
 from pdv.erros import ErroPDV, EstoqueInsuficiente
@@ -64,6 +64,11 @@ class VendaPage(QWidget):
         instrucoes.setObjectName("instrucoesVenda")
         layout.addWidget(instrucoes)
 
+        self.aviso_caixa_label = QLabel(
+            "Caixa fechado. Abra o caixa na aba Caixa para registrar vendas."
+        )
+        self.aviso_caixa_label.setObjectName("avisoCaixa")
+        layout.addWidget(self.aviso_caixa_label)
         self.produto_input = QLineEdit()
         self.produto_input.setObjectName("produtoInput")
         self.produto_input.setPlaceholderText("Código de barras ou nome do produto")
@@ -121,6 +126,13 @@ class VendaPage(QWidget):
         self.setStyleSheet("""
             QLabel#tituloVenda { color: #173c35; font-size: 24px; font-weight: 700; }
             QLabel#instrucoesVenda, QLabel#statusVenda { color: #53655f; }
+            QLabel#avisoCaixa {
+                padding: 8px 12px;
+                color: #7a4b00;
+                background: #fff3d6;
+                border: 1px solid #e6c987;
+                border-radius: 4px;
+            }
             QLineEdit#produtoInput {
                 padding: 0 12px;
                 color: #20352e;
@@ -165,7 +177,29 @@ class VendaPage(QWidget):
                 font-weight: 600;
             }
             QPushButton#finalizarVenda:hover { background: #104c3d; }
+            QPushButton:disabled { color: #8a9992; background: #eef2f0; border: 1px solid #d5dfda; }
+            QPushButton#finalizarVenda:disabled { color: #eef2f0; background: #9db5ac; border: 0; }
         """)
+        self.atualizar_caixa()
+
+    def ao_exibir(self):
+        """Chamada pela janela quando a aba Venda é aberta: o caixa pode ter mudado."""
+        self.atualizar_caixa()
+        if self._caixa_esta_aberto:
+            self.produto_input.setFocus()  # pronto para a próxima leitura
+
+    def atualizar_caixa(self):
+        """Mostra o aviso e libera ou trava o botão conforme o caixa esteja aberto."""
+        self._caixa_esta_aberto = caixa_aberto() is not None
+        self.aviso_caixa_label.setVisible(not self._caixa_esta_aberto)
+
+        # o carrinho exige caixa aberto (regra em pdv/carrinho.py), então a leitura também trava
+        self.produto_input.setEnabled(self._caixa_esta_aberto)
+        self.produto_input.setPlaceholderText(
+            "Código de barras ou nome do produto"
+            if self._caixa_esta_aberto
+            else "Abra o caixa para registrar vendas"
+        )
         self._atualizar_carrinho()
 
     def _mostrar_erro(self, mensagem):
@@ -243,7 +277,7 @@ class VendaPage(QWidget):
                 )
 
         self.total_label.setText(f"Total: {dinheiro(self.carrinho.total())}")
-        self.finalizar_button.setEnabled(not self.carrinho.esta_vazio())
+        self.finalizar_button.setEnabled(self._caixa_esta_aberto and not self.carrinho.esta_vazio())
         self.desfazer_button.setEnabled(bool(itens))
         self.remover_button.setEnabled(bool(itens))
         self.limpar_button.setEnabled(bool(itens))
@@ -341,6 +375,7 @@ class VendaPage(QWidget):
                 return
         except ErroPDV as erro:
             self._mostrar_erro(str(erro))
+            self.atualizar_caixa()  # o caixa pode ter sido fechado em outro lugar
             return
 
         texto = gerar_comprovante(resultado.id_venda)
