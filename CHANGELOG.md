@@ -11,6 +11,14 @@ z= correção de bugs no projeto
 
 ---
 
+## [1.12.1] - 2026-10-29
+
+### Corrigido
+
+- Interface desktop: com o caixa fechado, a aba Venda deixava ler produtos e só mostrava o erro ("Abra o caixa antes de iniciar uma venda") na hora da leitura. Agora ela avisa que o caixa está fechado e trava a leitura e a finalização, e libera sozinha quando o caixa é aberto.
+
+---
+
 ## [1.12.0] - 2026-10-28
 
 ### Interface desktop
